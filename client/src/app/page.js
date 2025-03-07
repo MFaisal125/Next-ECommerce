@@ -1,18 +1,3 @@
-/**
- * Title: Write a program using JavaScript on Page
- * Author: Hasibul Islam
- * Portfolio: https://devhasibulislam.vercel.app
- * Linkedin: https://linkedin.com/in/devhasibulislam
- * GitHub: https://github.com/devhasibulislam
- * Facebook: https://facebook.com/devhasibulislam
- * Instagram: https://instagram.com/devhasibulislam
- * Twitter: https://twitter.com/devhasibulislam
- * Pinterest: https://pinterest.com/devhasibulislam
- * WhatsApp: https://wa.me/8801906315901
- * Telegram: devhasibulislam
- * Date: 03, November 2023
- */
-
 "use client";
 
 import Banner1 from "@/components/home/Banner1";
@@ -29,7 +14,7 @@ export default function Home() {
   return (
     <>
       <Main>
-        <main className="flex flex-col gap-y-20 w-full">
+        <main className="flex bg-black flex-col gap-y-20 w-full">
           <Banner1 />
           <Steps />
           <NewArrivals />

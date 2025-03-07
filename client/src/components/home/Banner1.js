@@ -257,7 +257,7 @@ const Banner1 = () => {
                 className="max-w-lg"
               >
                 <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-sm font-medium mb-3">
-                  Featured Collection #{currentIndex + 1}
+                  Featured Collection {currentIndex + 1}
                 </span>
                 <h1
                   className={`text-4xl md:text-5xl lg:text-6xl font-bold mb-4 ${bannerItems[currentIndex].textColor}`}
