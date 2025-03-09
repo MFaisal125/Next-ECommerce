@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <>
       <Main>
-        <main className="flex flex-col gap-y-10 w-full">
+        <main className="flex flex-col gap-y-4 w-full">
           <Banner1 />
           <Steps />
           <NewArrivals />

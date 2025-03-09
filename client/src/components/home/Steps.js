@@ -409,7 +409,7 @@ const Steps = () => {
 
   return (
     <Container>
-      <div ref={containerRef} className="py-6 -mt-8 bg-white overflow-hidden">
+      <div ref={containerRef} className="py-6  bg-white overflow-hidden">
         {/* Modern subtle gradient background */}
         <div className="relative mb-4">
           <FuturisticBlobs />

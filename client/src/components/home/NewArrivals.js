@@ -88,10 +88,10 @@ const NewArrivals = () => {
 
   return (
     <Container>
-      <section className="flex flex-col gap-y-10">
+      <section className="flex flex-col gap-y-5">
         <h1 className="text-4xl">New Arrivals</h1>
 
-        <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 md:gap-x-6 gap-y-8">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 md:gap-x-4 gap-y-4">
           {productsLoading ? (
             <>
               {[1, 2, 3, 4].map((_, index) => (
@@ -112,8 +112,11 @@ const NewArrivals = () => {
         )}
 
         {hasMoreProducts && (
-          <div className="flex justify-center mt-8">
-            <span onClick={handleShowMore} className="px-6 bg-blue-500 py-2">
+          <div className="flex justify-center rounded-full mt-4">
+            <span
+              onClick={handleShowMore}
+              className="px-6 rounded-full bg-cyan-400 py-2"
+            >
               Show More
             </span>
           </div>
