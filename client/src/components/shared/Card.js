@@ -234,56 +234,42 @@ import {
 import { toast } from "react-hot-toast";
 import { useSelector } from "react-redux";
 import Spinner from "./Spinner";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
-import { gsap } from "gsap";
 
-// Memoized Badge component for better performance
-const Badge = memo(({ children, className, ...props }) => {
-  return (
-    <motion.span
-      className={
-        "px-2 py-0.5 rounded-full font-medium w-fit transition-all duration-300" +
-        (className ? " " + className : "")
-      }
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.98 }}
-      {...props}
-    >
-      {children}
-    </motion.span>
-  );
-});
+// Optimized Badge component with memo
+const Badge = memo(({ children, className, ...props }) => (
+  <span
+    className={
+      "px-2 py-0.5 rounded-full text-xs font-medium w-fit transition-colors duration-300" +
+      (className ? " " + className : "")
+    }
+    {...props}
+  >
+    {children}
+  </span>
+));
 Badge.displayName = "Badge";
 
-// Memoized Logo component for better performance
-const Logo = memo(({ src, alt, className, onClick, isActive }) => {
-  return (
-    <motion.div
-      className={`relative overflow-hidden rounded-lg cursor-pointer ${
-        isActive ? "ring-2 ring-blue-500 ring-offset-1" : ""
-      }`}
-      onClick={onClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
-    >
-      <Image
-        src={src || "/placeholder.svg"}
-        alt={alt}
-        width={28}
-        height={28}
-        className={
-          "w-[28px] h-[28px] object-cover shadow-sm border border-gray-100 rounded-lg" +
-          (className ? " " + className : "")
-        }
-      />
-      <motion.div
-        className="absolute inset-0 bg-white/10"
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-      ></motion.div>
-    </motion.div>
-  );
-});
+// Optimized Logo component with memo
+const Logo = memo(({ src, alt, className, onClick, isActive }) => (
+  <div
+    className={`relative overflow-hidden rounded-lg cursor-pointer ${
+      isActive ? "ring-2 ring-blue-500 ring-offset-1" : ""
+    }`}
+    onClick={onClick}
+  >
+    <Image
+      src={src || "/placeholder.svg"}
+      alt={alt || "Logo"}
+      width={28}
+      height={28}
+      className={
+        "w-[28px] h-[28px] object-cover shadow-sm border border-gray-100 rounded-lg transition-transform hover:scale-110 active:scale-95" +
+        (className ? " " + className : "")
+      }
+    />
+    <div className="absolute inset-0 bg-white/10 opacity-0 hover:opacity-100 transition-opacity"></div>
+  </div>
+));
 Logo.displayName = "Logo";
 
 // Optimized AddToFavorite component
@@ -291,7 +277,6 @@ const AddToFavorite = memo(({ product }) => {
   const [addToFavorite, { isLoading, data, error }] =
     useAddToFavoriteMutation();
 
-  // Use callback to prevent recreation on each render
   const handleClick = useCallback(
     (e) => {
       e.stopPropagation();
@@ -315,11 +300,9 @@ const AddToFavorite = memo(({ product }) => {
   }, [isLoading, data, error]);
 
   return (
-    <motion.button
-      className="bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-sm border border-gray-100"
+    <button
+      className="bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-sm border border-gray-100 transition-transform hover:scale-110 active:scale-95"
       onClick={handleClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
       aria-label="Add to favorites"
     >
       {isLoading ? (
@@ -327,7 +310,7 @@ const AddToFavorite = memo(({ product }) => {
       ) : (
         <MdFavorite className="w-3.5 h-3.5 text-gray-700 hover:text-blue-500 transition-colors" />
       )}
-    </motion.button>
+    </button>
   );
 });
 AddToFavorite.displayName = "AddToFavorite";
@@ -337,7 +320,6 @@ const RemoveFromFavorite = memo(({ favorite }) => {
   const [removeFromFavorite, { isLoading, data, error }] =
     useRemoveFromFavoriteMutation();
 
-  // Use callback to prevent recreation on each render
   const handleClick = useCallback(
     (e) => {
       e.stopPropagation();
@@ -361,11 +343,9 @@ const RemoveFromFavorite = memo(({ favorite }) => {
   }, [isLoading, data, error]);
 
   return (
-    <motion.button
-      className="bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-sm border border-gray-100"
+    <button
+      className="bg-white/90 backdrop-blur-xl p-2 rounded-full shadow-sm border border-gray-100 transition-transform hover:scale-110 active:scale-95"
       onClick={handleClick}
-      whileHover={{ scale: 1.1 }}
-      whileTap={{ scale: 0.95 }}
       aria-label="Remove from favorites"
     >
       {isLoading ? (
@@ -373,7 +353,7 @@ const RemoveFromFavorite = memo(({ favorite }) => {
       ) : (
         <MdFavorite className="w-3.5 h-3.5 text-red-500 hover:text-red-600 transition-colors" />
       )}
-    </motion.button>
+    </button>
   );
 });
 RemoveFromFavorite.displayName = "RemoveFromFavorite";
@@ -383,12 +363,8 @@ const CampaignBadge = memo(({ campaign }) => {
   if (!campaign) return null;
 
   return (
-    <motion.div
-      className="absolute bottom-3 right-3 z-20"
-      initial={{ opacity: 1 }}
-      whileHover={{ scale: 1.05 }}
-    >
-      <motion.span className="text-xs bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-full shadow-sm border border-gray-100 cursor-help inline-flex items-center">
+    <div className="absolute bottom-3 right-3 z-20">
+      <span className="text-xs bg-white/90 backdrop-blur-xl px-3 py-1.5 rounded-full shadow-sm border border-gray-100 cursor-help inline-flex items-center transition-transform hover:scale-105">
         {campaign?.state === "discount" && (
           <span className="flex flex-row gap-x-1.5 items-center font-medium">
             <Discount /> {campaign.title}
@@ -409,135 +385,22 @@ const CampaignBadge = memo(({ campaign }) => {
             <Arrival /> {campaign.title}
           </span>
         )}
-      </motion.span>
-    </motion.div>
+      </span>
+    </div>
   );
 });
 CampaignBadge.displayName = "CampaignBadge";
 
-// Optimized QuantumParticles component
-const QuantumParticles = memo(({ isHovering }) => {
-  // Pre-generate random positions for better performance
-  const particles = Array.from({ length: 10 }, (_, i) => ({
-    id: i,
-    initialX: Math.random() * 100,
-    initialY: Math.random() * 100,
-    targetX: Math.random() * 100,
-    targetY: Math.random() * 100,
-    delay: Math.random() * 2,
-    duration: 2 + Math.random() * 3,
-  }));
-
-  return (
-    <motion.div
-      className="absolute inset-0 pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isHovering ? 0.5 : 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      {particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          className="absolute w-1 h-1 rounded-full bg-blue-400"
-          initial={{
-            x: `${particle.initialX}%`,
-            y: `${particle.initialY}%`,
-            opacity: 0,
-          }}
-          animate={{
-            x: `${particle.targetX}%`,
-            y: `${particle.targetY}%`,
-            opacity: [0, 0.8, 0],
-          }}
-          transition={{
-            duration: particle.duration,
-            repeat: Number.POSITIVE_INFINITY,
-            delay: particle.delay,
-          }}
-        />
-      ))}
-    </motion.div>
-  );
-});
-QuantumParticles.displayName = "QuantumParticles";
-
-// Optimized QuantumCorner component
-const QuantumCorner = memo(({ position, isHovering }) => {
-  const positions = {
-    topLeft: {
-      container: "absolute top-0 left-0 w-4 h-4 pointer-events-none",
-      horizontal: "absolute top-0 left-0 w-full h-0.5 bg-blue-400",
-      vertical: "absolute top-0 left-0 w-0.5 h-full bg-blue-400",
-      hOrigin: "left",
-      vOrigin: "top",
-    },
-    topRight: {
-      container: "absolute top-0 right-0 w-4 h-4 pointer-events-none",
-      horizontal: "absolute top-0 right-0 w-full h-0.5 bg-purple-400",
-      vertical: "absolute top-0 right-0 w-0.5 h-full bg-purple-400",
-      hOrigin: "right",
-      vOrigin: "top",
-    },
-    bottomLeft: {
-      container: "absolute bottom-0 left-0 w-4 h-4 pointer-events-none",
-      horizontal: "absolute bottom-0 left-0 w-full h-0.5 bg-pink-400",
-      vertical: "absolute bottom-0 left-0 w-0.5 h-full bg-pink-400",
-      hOrigin: "left",
-      vOrigin: "bottom",
-    },
-    bottomRight: {
-      container: "absolute bottom-0 right-0 w-4 h-4 pointer-events-none",
-      horizontal: "absolute bottom-0 right-0 w-full h-0.5 bg-blue-400",
-      vertical: "absolute bottom-0 right-0 w-0.5 h-full bg-blue-400",
-      hOrigin: "right",
-      vOrigin: "bottom",
-    },
-  };
-
-  const pos = positions[position];
-
-  return (
-    <div className={pos.container}>
-      <motion.div
-        className={pos.horizontal}
-        initial={{ scaleX: 0.3, opacity: 0.3 }}
-        animate={{
-          scaleX: isHovering ? 1 : 0.3,
-          opacity: isHovering ? 1 : 0.3,
-        }}
-        transition={{ duration: 0.4 }}
-        style={{ transformOrigin: pos.hOrigin }}
-      ></motion.div>
-      <motion.div
-        className={pos.vertical}
-        initial={{ scaleY: 0.3, opacity: 0.3 }}
-        animate={{
-          scaleY: isHovering ? 1 : 0.3,
-          opacity: isHovering ? 1 : 0.3,
-        }}
-        transition={{ duration: 0.4 }}
-        style={{ transformOrigin: pos.vOrigin }}
-      ></motion.div>
-    </div>
-  );
-});
-QuantumCorner.displayName = "QuantumCorner";
-
 // Main Card component - optimized for performance
-const Card = ({ index, product, ...rest }) => {
+const Card = ({ index = 0, product, ...rest }) => {
   const router = useRouter();
   const user = useSelector((state) => state?.auth?.user);
   const [activeImage, setActiveImage] = useState(null);
   const [isHovering, setIsHovering] = useState(false);
   const cardRef = useRef(null);
   const imageRef = useRef(null);
-  const detailsRef = useRef(null);
+  const borderRef = useRef(null);
   const ambientLightRef = useRef(null);
-  const timelineRef = useRef(null);
-
-  // Mouse position values for ambient light effect
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
   // Find favorite once
   const favorite = user?.favorites?.find(
@@ -549,94 +412,38 @@ const Card = ({ index, product, ...rest }) => {
     setActiveImage(product?.thumbnail?.url || "/placeholder.svg");
   }, [product?.thumbnail?.url]);
 
-  // Create GSAP timeline once
+  // Animate border on mount
   useEffect(() => {
-    if (!cardRef.current || !imageRef.current || !detailsRef.current) return;
+    if (!borderRef.current) return;
 
-    // Create a timeline for hover animations
-    timelineRef.current = gsap.timeline({ paused: true });
+    // Create animated border effect
+    const animateBorder = () => {
+      const border = borderRef.current;
+      if (!border) return;
 
-    // Animate image
-    timelineRef.current.to(
-      imageRef.current,
-      {
-        scale: 1.05,
-        duration: 0.8,
-        ease: "power2.out",
-      },
-      0
-    );
+      let start = null;
+      const duration = 2000; // 2 seconds per cycle
 
-    // Animate details to become more prominent
-    timelineRef.current.to(
-      detailsRef.current.querySelectorAll(".hover-scale"),
-      {
-        scale: 1.03,
-        duration: 0.4,
-        ease: "back.out(1.7)",
-      },
-      0.1
-    );
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        const progress = ((timestamp - start) % duration) / duration;
 
-    timelineRef.current.to(
-      detailsRef.current.querySelectorAll(".hover-highlight"),
-      {
-        color: "#0070f3",
-        fontWeight: "600",
-        duration: 0.3,
-      },
-      0.1
-    );
+        // Create gradient with moving position
+        const gradientPos = (progress * 400) % 100;
+        border.style.background = `linear-gradient(90deg, 
+          rgba(59, 130, 246, 0.7) ${gradientPos - 20}%, 
+          rgba(168, 85, 247, 0.7) ${gradientPos}%, 
+          rgba(236, 72, 153, 0.7) ${gradientPos + 20}%, 
+          rgba(59, 130, 246, 0.3) ${gradientPos + 40}%)`;
 
-    return () => {
-      if (timelineRef.current) {
-        timelineRef.current.kill();
-      }
+        requestAnimationFrame(animate);
+      };
+
+      requestAnimationFrame(animate);
     };
+
+    animateBorder();
   }, []);
-
-  // Play or reverse timeline based on hover state
-  useEffect(() => {
-    if (!timelineRef.current) return;
-
-    if (isHovering) {
-      timelineRef.current.play();
-    } else {
-      timelineRef.current.reverse();
-    }
-  }, [isHovering]);
-
-  // Memoized logo click handler
-  const handleLogoClick = useCallback((e, logoUrl) => {
-    e.stopPropagation(); // Prevent card click
-
-    // Animate image change with GSAP
-    if (imageRef.current) {
-      gsap.to(imageRef.current, {
-        opacity: 0,
-        scale: 0.95,
-        duration: 0.3,
-        onComplete: () => {
-          setActiveImage(logoUrl);
-          gsap.to(imageRef.current, {
-            opacity: 1,
-            scale: 1,
-            duration: 0.5,
-            ease: "elastic.out(1, 0.75)",
-          });
-        },
-      });
-    }
-  }, []);
-
-  // Memoized product click handler
-  const handleProductClick = useCallback(() => {
-    router.push(
-      `/product?product_id=${product?._id}&product_title=${product?.title
-        .replace(/ /g, "-")
-        .toLowerCase()}}`
-    );
-  }, [router, product?._id, product?.title]);
 
   // Optimized mouse move handler using RAF
   const handleMouseMove = useCallback(
@@ -649,14 +456,34 @@ const Card = ({ index, product, ...rest }) => {
 
       // Use requestAnimationFrame for smoother performance
       requestAnimationFrame(() => {
-        mouseX.set(x);
-        mouseY.set(y);
-
         ambientLightRef.current.style.background = `radial-gradient(circle at ${x}px ${y}px, rgba(120, 120, 255, 0.15), transparent 60%)`;
       });
     },
-    [isHovering, mouseX, mouseY]
+    [isHovering]
   );
+
+  // Memoized logo click handler
+  const handleLogoClick = useCallback((e, logoUrl) => {
+    e.stopPropagation(); // Prevent card click
+
+    // Simple fade transition
+    if (imageRef.current) {
+      imageRef.current.style.opacity = "0";
+      setTimeout(() => {
+        setActiveImage(logoUrl);
+        imageRef.current.style.opacity = "1";
+      }, 200);
+    }
+  }, []);
+
+  // Memoized product click handler
+  const handleProductClick = useCallback(() => {
+    router.push(
+      `/product?product_id=${product?._id}&product_title=${product?.title
+        .replace(/ /g, "-")
+        .toLowerCase()}}`
+    );
+  }, [router, product?._id, product?.title]);
 
   // Optimized hover handlers
   const handleHoverStart = useCallback(() => setIsHovering(true), []);
@@ -671,60 +498,73 @@ const Card = ({ index, product, ...rest }) => {
   const hasCampaign = Boolean(product?.campaign);
 
   return (
-    <motion.div
+    <div
       {...rest}
       ref={cardRef}
-      className="flex-shrink-0 flex flex-col bg-white rounded-2xl overflow-hidden relative w-full will-change-transform"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: Math.min(index * 0.05, 0.3) }} // Cap delay for better performance
-      onHoverStart={handleHoverStart}
-      onHoverEnd={handleHoverEnd}
+      className={`
+        flex-shrink-0 flex flex-col bg-white rounded-2xl overflow-hidden relative w-full
+        shadow-[0_10px_25px_-5px_rgba(0,0,0,0.05)]
+        transition-all duration-300 ease-out
+        ${
+          isHovering
+            ? "shadow-[0_20px_30px_-10px_rgba(0,0,0,0.1)] translate-y-[-5px]"
+            : ""
+        }
+      `}
+      onMouseEnter={handleHoverStart}
+      onMouseLeave={handleHoverEnd}
       onMouseMove={handleMouseMove}
       style={{
-        boxShadow: "0 10px 25px -5px rgba(0,0,0,0.05)",
         height: "fit-content",
         maxWidth: "100%",
-        contain: "layout paint style", // Optimize rendering
-      }}
-      whileHover={{
-        boxShadow: "0 20px 30px -10px rgba(0,0,0,0.1)",
-        y: -5,
+        opacity: 0,
+        transform: "translateY(20px)",
+        animation: `fadeIn 0.5s ${Math.min(index * 0.05, 0.3)}s forwards`,
       }}
     >
-      {/* Ambient light effect - optimized */}
+      {/* Ambient light effect */}
       <div
         ref={ambientLightRef}
-        className="absolute inset-0 pointer-events-none z-0 opacity-0 will-change-transform"
+        className="absolute inset-0 pointer-events-none z-0 opacity-0"
         style={{
           opacity: isHovering ? 0.8 : 0,
           transition: "opacity 0.5s ease",
         }}
       ></div>
 
-      {/* Quantum border effect - optimized */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl pointer-events-none z-10"
-        animate={{
-          boxShadow: isHovering
-            ? "inset 0 0 0 1.5px rgba(120, 120, 255, 0.5), 0 0 20px 1px rgba(120, 120, 255, 0.2)"
-            : "inset 0 0 0 0.5px rgba(120, 120, 255, 0.2)",
-        }}
-        transition={{ duration: 0.4 }}
-      ></motion.div>
-
-      {/* Product Image Container - optimized */}
+      {/* Animated border */}
+      {/* Animated border that goes around the entire card */}
       <div
-        className="relative w-full overflow-hidden will-change-transform"
+        className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+        style={{
+          background: "linear-gradient(90deg, transparent, transparent)",
+          padding: "1.5px",
+          mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+          maskComposite: "exclude",
+          animation: "rotate-border 4s linear infinite",
+          opacity: isHovering ? 1 : 0.6,
+          transition: "opacity 0.4s ease",
+        }}
+      ></div>
+
+      {/* Product Image Container */}
+      <div
+        className="relative w-full overflow-hidden"
         style={{ aspectRatio: "4/3" }}
       >
-        <div ref={imageRef} className="w-full h-full relative">
+        <div
+          ref={imageRef}
+          className="w-full h-full relative transition-all duration-300"
+          style={{
+            transform: isHovering ? "scale(1.05)" : "scale(1)",
+          }}
+        >
           <Image
             src={activeImage || "/placeholder.svg"}
             alt={product?.thumbnail?.public_id || "Product image"}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            className="object-cover"
+            className="object-cover transition-opacity duration-200"
             priority={index < 4} // Prioritize loading for first 4 items
             loading={index < 8 ? "eager" : "lazy"} // Eager load first 8 items
           />
@@ -732,11 +572,7 @@ const Card = ({ index, product, ...rest }) => {
 
         {/* Brand and Store Logos - conditionally rendered */}
         {hasLogo && (
-          <motion.div
-            className="flex flex-row gap-x-2 absolute top-3 left-3 z-20"
-            initial={{ opacity: 1 }}
-            animate={{ opacity: 1 }}
-          >
+          <div className="flex flex-row gap-x-2 absolute top-3 left-3 z-20">
             {product?.brand?.logo?.url && (
               <Logo
                 src={product?.brand?.logo?.url}
@@ -755,147 +591,260 @@ const Card = ({ index, product, ...rest }) => {
                 isActive={activeImage === product?.store?.thumbnail?.url}
               />
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* Reset button - conditionally rendered */}
-        <AnimatePresence>
-          {showResetButton && (
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLogoClick(e, product?.thumbnail?.url);
-              }}
-              className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-sm border border-gray-100"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              transition={{ duration: 0.3 }}
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.95 }}
-              aria-label="View main product image"
-            >
-              <IoReturnUpBack className="w-3.5 h-3.5 text-gray-700" />
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {showResetButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleLogoClick(e, product?.thumbnail?.url);
+            }}
+            className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-md p-2 rounded-full shadow-sm border border-gray-100 transition-all duration-300 hover:scale-110 active:scale-95"
+            aria-label="View main product image"
+          >
+            <IoReturnUpBack className="w-3.5 h-3.5 text-gray-700" />
+          </button>
+        )}
 
         {/* Campaign Badge - conditionally rendered */}
         {hasCampaign && <CampaignBadge campaign={product.campaign} />}
 
         {/* Favorite Button */}
-        <motion.div
-          className="absolute bottom-3 left-3 z-20"
-          initial={{ opacity: 1 }}
-        >
+        <div className="absolute bottom-3 left-3 z-20">
           {favorite ? (
             <RemoveFromFavorite favorite={favorite} />
           ) : (
             <AddToFavorite product={product} />
           )}
-        </motion.div>
+        </div>
 
-        {/* Quantum overlay effect - optimized */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent mix-blend-overlay will-change-opacity"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: isHovering ? 0.7 : 0 }}
-          transition={{ duration: 0.5 }}
-        ></motion.div>
+        {/* Overlay effect */}
+        <div
+          className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent mix-blend-overlay"
+          style={{
+            opacity: isHovering ? 0.7 : 0,
+            transition: "opacity 0.5s ease",
+          }}
+        ></div>
 
-        {/* Quantum scan line effect - optimized */}
+        {/* Scan line effect */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 will-change-transform"
-            animate={{
-              top: ["0%", "100%"],
+          <div
+            className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400"
+            style={{
+              animation: "scanLine 1.5s linear infinite",
               opacity: isHovering ? 1 : 0.3,
+              transition: "opacity 0.3s ease",
             }}
-            transition={{
-              top: {
-                repeat: Number.POSITIVE_INFINITY,
-                duration: 1.5,
-                ease: "linear",
-                repeatType: "loop",
-              },
-              opacity: { duration: 0.3 },
-            }}
-          ></motion.div>
+          ></div>
         </div>
       </div>
 
-      {/* Product Details - optimized */}
+      {/* Product Details */}
       <div
-        ref={detailsRef}
-        className="flex flex-col gap-y-3 px-4 py-3 h-full relative"
+        className="flex flex-col gap-y-3 px-4 py-3 h-full relative cursor-pointer"
         onClick={handleProductClick}
       >
         {/* Variations */}
-        <div className="flex flex-row items-center gap-x-2 hover-scale">
-          <Badge className="text-xs text-indigo-800 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 transition-colors">
+        <div
+          className="flex flex-row items-center gap-x-2 transition-transform duration-300"
+          style={{ transform: isHovering ? "scale(1.03)" : "scale(1)" }}
+        >
+          <Badge className="text-indigo-800 bg-indigo-50 border border-indigo-100 hover:bg-indigo-100 transition-colors">
             {product?.variations?.colors?.length + " " + "Colors"}
           </Badge>
           <div className="h-4 border-l w-[1px] border-gray-200"></div>
-          <Badge className="text-xs text-purple-800 bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-colors">
+          <Badge className="text-purple-800 bg-purple-50 border border-purple-100 hover:bg-purple-100 transition-colors">
             {product?.variations?.sizes?.length + " " + "Sizes"}
           </Badge>
         </div>
 
         {/* Title */}
-        <h2 className="line-clamp-1 text-sm sm:text-base font-medium cursor-pointer hover-highlight">
+        <h2
+          className="line-clamp-1 text-sm sm:text-base font-medium transition-all duration-300"
+          style={{
+            color: isHovering ? "#0070f3" : "inherit",
+            fontWeight: isHovering ? "600" : "500",
+          }}
+        >
           {product?.title}
         </h2>
 
         {/* Price and Rating */}
         <div className="flex flex-row items-center justify-between">
           {/* Price */}
-          <motion.div
-            className="hover-scale"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <div className="transition-transform duration-300 hover:scale-105 active:scale-98">
             <span className="flex items-center border-2 border-green-500 rounded-full py-1 px-2.5 text-xs sm:text-sm font-medium bg-green-50/80 backdrop-blur-sm">
               <span className="text-green-600 !leading-none">
                 ${product?.price}.00
               </span>
             </span>
-          </motion.div>
+          </div>
 
           {/* Rating */}
-          <motion.div
-            className="flex flex-row items-center gap-x-1 bg-amber-50/80 px-2 py-1 rounded-full hover-scale"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.98 }}
-          >
+          <div className="flex flex-row items-center gap-x-1 bg-amber-50/80 px-2 py-1 rounded-full transition-transform duration-300 hover:scale-105 active:scale-98">
             <AiFillStar className="text-amber-400 w-3.5 h-3.5" />
             <span className="text-xs font-medium text-amber-700">
               {product?.reviews?.length}
             </span>
-          </motion.div>
+          </div>
         </div>
-
-        {/* Quantum particles - optimized */}
-        <QuantumParticles isHovering={isHovering} />
       </div>
 
-      {/* Quantum energy field - optimized */}
-      <motion.div
-        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 will-change-transform"
-        initial={{ scaleX: 0.3, opacity: 0.3 }}
-        animate={{
-          scaleX: isHovering ? 1 : 0.3,
+      {/* Bottom border */}
+      <div
+        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+        style={{
+          transform: `scaleX(${isHovering ? 1 : 0.3})`,
           opacity: isHovering ? 1 : 0.3,
+          transition:
+            "transform 0.6s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.6s ease",
+          transformOrigin: "left",
         }}
-        transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
-        style={{ transformOrigin: "left" }}
-      ></motion.div>
+      ></div>
 
-      {/* Quantum corners - optimized */}
-      <QuantumCorner position="topLeft" isHovering={isHovering} />
-      <QuantumCorner position="topRight" isHovering={isHovering} />
-      <QuantumCorner position="bottomLeft" isHovering={isHovering} />
-      <QuantumCorner position="bottomRight" isHovering={isHovering} />
-    </motion.div>
+      {/* Corner accents */}
+      {["topLeft", "topRight", "bottomLeft", "bottomRight"].map((corner) => {
+        const positions = {
+          topLeft: {
+            container: "absolute top-0 left-0 w-4 h-4 pointer-events-none",
+            horizontal: "absolute top-0 left-0 w-full h-0.5 bg-blue-400",
+            vertical: "absolute top-0 left-0 w-0.5 h-full bg-blue-400",
+            hOrigin: "left",
+            vOrigin: "top",
+          },
+          topRight: {
+            container: "absolute top-0 right-0 w-4 h-4 pointer-events-none",
+            horizontal: "absolute top-0 right-0 w-full h-0.5 bg-purple-400",
+            vertical: "absolute top-0 right-0 w-0.5 h-full bg-purple-400",
+            hOrigin: "right",
+            vOrigin: "top",
+          },
+          bottomLeft: {
+            container: "absolute bottom-0 left-0 w-4 h-4 pointer-events-none",
+            horizontal: "absolute bottom-0 left-0 w-full h-0.5 bg-pink-400",
+            vertical: "absolute bottom-0 left-0 w-0.5 h-full bg-pink-400",
+            hOrigin: "left",
+            vOrigin: "bottom",
+          },
+          bottomRight: {
+            container: "absolute bottom-0 right-0 w-4 h-4 pointer-events-none",
+            horizontal: "absolute bottom-0 right-0 w-full h-0.5 bg-blue-400",
+            vertical: "absolute bottom-0 right-0 w-0.5 h-full bg-blue-400",
+            hOrigin: "right",
+            vOrigin: "bottom",
+          },
+        };
+
+        const pos = positions[corner];
+
+        return (
+          <div key={corner} className={pos.container}>
+            <div
+              className={pos.horizontal}
+              style={{
+                transform: `scaleX(${isHovering ? 1 : 0.3})`,
+                opacity: isHovering ? 1 : 0.3,
+                transition: "transform 0.4s ease, opacity 0.4s ease",
+                transformOrigin: pos.hOrigin,
+              }}
+            ></div>
+            <div
+              className={pos.vertical}
+              style={{
+                transform: `scaleY(${isHovering ? 1 : 0.3})`,
+                opacity: isHovering ? 1 : 0.3,
+                transition: "transform 0.4s ease, opacity 0.4s ease",
+                transformOrigin: pos.vOrigin,
+              }}
+            ></div>
+          </div>
+        );
+      })}
+
+      {/* CSS Animations */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes scanLine {
+          from {
+            top: 0%;
+          }
+          to {
+            top: 100%;
+          }
+        }
+
+        @keyframes rotate-border {
+          0% {
+            background: linear-gradient(
+              0deg,
+              #3b82f6,
+              #a855f7,
+              #ec4899,
+              #3b82f6
+            );
+            background-size: 400% 400%;
+            background-position: 0% 0%;
+          }
+          25% {
+            background: linear-gradient(
+              90deg,
+              #3b82f6,
+              #a855f7,
+              #ec4899,
+              #3b82f6
+            );
+            background-size: 400% 400%;
+            background-position: 100% 0%;
+          }
+          50% {
+            background: linear-gradient(
+              180deg,
+              #3b82f6,
+              #a855f7,
+              #ec4899,
+              #3b82f6
+            );
+            background-size: 400% 400%;
+            background-position: 100% 100%;
+          }
+          75% {
+            background: linear-gradient(
+              270deg,
+              #3b82f6,
+              #a855f7,
+              #ec4899,
+              #3b82f6
+            );
+            background-size: 400% 400%;
+            background-position: 0% 100%;
+          }
+          100% {
+            background: linear-gradient(
+              360deg,
+              #3b82f6,
+              #a855f7,
+              #ec4899,
+              #3b82f6
+            );
+            background-size: 400% 400%;
+            background-position: 0% 0%;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 
