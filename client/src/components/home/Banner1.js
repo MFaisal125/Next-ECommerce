@@ -608,7 +608,7 @@ const Banner1 = memo(() => {
   return (
     <Container>
       <div
-        className="relative h-[450px] sm:h-[400px] md:h-[400px] lg:h-[500px] w-full rounded-xl overflow-hidden shadow-lg border border-white/10"
+        className="relative h-[450px] sm:h-[400px] md:h-[400px] lg:h-[450px] w-full rounded-xl overflow-hidden shadow-lg border border-white/10"
         ref={carouselRef}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
