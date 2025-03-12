@@ -215,6 +215,7 @@
 // }
 
 // export default Card;
+
 "use client";
 
 import { useEffect, useState, useRef, useCallback, memo, useMemo } from "react";
