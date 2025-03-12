@@ -90,84 +90,192 @@ import { useRef, useEffect, useState, memo, useCallback, useMemo } from "react";
 import { motion, useInView } from "framer-motion";
 import gsap from "gsap";
 
-// Optimized Container component with React.memo
+// Optimized Container component
 const Container = memo(({ children }) => (
   <div className="container mx-auto px-4">{children}</div>
 ));
 Container.displayName = "Container";
 
-// Virtualized step rendering for extreme performance
-const VirtualizedStepList = memo(
-  ({ items, itemWidth, hoveredIndex, setHoveredIndex, setIsPaused }) => {
-    // Only render visible items plus buffer for smooth scrolling
-    const visibleItems = useMemo(() => {
-      if (typeof window === "undefined") return items.slice(0, 12);
+const Steps = () => {
+  // Memoized steps data
+  const steps = useMemo(
+    () => [
+      {
+        badge: (
+          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-red-800 bg-red-50 border border-red-100 relative shadow-sm">
+            Step 1
+          </span>
+        ),
+        title: "Smart Discovery",
+        description: "AI-powered filtering predicts your preferences",
+        thumbnail: "/assets/home/steps/step-1.png",
+        color: "rgba(254, 226, 226, 0.3)",
+        accent: "#ef4444",
+      },
+      {
+        badge: (
+          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-indigo-800 bg-indigo-50 border border-indigo-100 relative shadow-sm">
+            Step 2
+          </span>
+        ),
+        title: "Instant Cart",
+        description: "One-tap selection with smart recommendations",
+        thumbnail: "/assets/home/steps/step-2.png",
+        color: "rgba(224, 231, 255, 0.3)",
+        accent: "#6366f1",
+      },
+      {
+        badge: (
+          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-yellow-800 bg-yellow-50 border border-yellow-100 relative shadow-sm">
+            Step 3
+          </span>
+        ),
+        title: "Express Delivery",
+        description: "Same-day delivery with real-time tracking",
+        thumbnail: "/assets/home/steps/step-3.png",
+        color: "rgba(254, 249, 195, 0.3)",
+        accent: "#eab308",
+      },
+      {
+        badge: (
+          <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-purple-800 bg-purple-50 border border-purple-100 relative shadow-sm">
+            Step 4
+          </span>
+        ),
+        title: "Perfect Experience",
+        description: "Personalized support and seamless returns",
+        thumbnail: "/assets/home/steps/step-4.png",
+        color: "rgba(233, 213, 255, 0.3)",
+        accent: "#a855f7",
+      },
+    ],
+    []
+  );
 
-      const viewportWidth = window.innerWidth;
-      const itemsPerView = Math.ceil(viewportWidth / (itemWidth + 32)) + 4; // Add buffer
-      return items.slice(0, Math.min(items.length, itemsPerView * 3)); // Triple for smooth looping
-    }, [items, itemWidth]);
+  // Create multiple copies for smooth scrolling - memoized
+  const allSteps = useMemo(
+    () => [...steps, ...steps, ...steps, ...steps],
+    [steps]
+  );
 
-    return (
-      <>
-        {visibleItems.map((step, index) => (
-          <StepItem
-            key={`step-${index}`}
-            step={step}
-            index={index}
-            itemWidth={itemWidth}
-            hoveredIndex={hoveredIndex}
-            setHoveredIndex={setHoveredIndex}
-            setIsPaused={setIsPaused}
-          />
-        ))}
-      </>
-    );
-  }
-);
-VirtualizedStepList.displayName = "VirtualizedStepList";
+  // State and refs with proper typing
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [width, setWidth] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const containerRef = useRef(null);
+  const scrollerRef = useRef(null);
+  const timelineRef = useRef(null);
+  const resizeObserverRef = useRef(null);
+  const isInView = useInView(containerRef, { amount: 0.1 });
 
-// Optimized step item with pure component pattern
-const StepItem = memo(
-  ({ step, index, itemWidth, hoveredIndex, setHoveredIndex, setIsPaused }) => {
-    // Precompute styles for better performance
-    const baseStyles = useMemo(
-      () => ({
-        width: itemWidth,
-        willChange: "transform",
-      }),
-      [itemWidth]
-    );
+  // Optimized width calculation with ResizeObserver
+  useEffect(() => {
+    if (!scrollerRef.current) return;
 
-    const iconContainerStyles = useMemo(
-      () => ({
-        backgroundColor: step.color,
-        boxShadow:
-          hoveredIndex === index
-            ? `0 10px 25px -5px ${step.accent}30`
-            : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
-        border: "1px solid rgba(255, 255, 255, 0.7)",
-      }),
-      [step.color, step.accent, hoveredIndex, index]
-    );
+    const calculateWidth = () => {
+      const stepItems = scrollerRef.current.querySelectorAll(".step-item");
+      if (stepItems.length === 0) return;
 
-    // Optimized event handlers with useCallback
-    const handleHoverStart = useCallback(() => {
-      setHoveredIndex(index);
-      setIsPaused(true);
-    }, [index, setHoveredIndex, setIsPaused]);
+      const stepWidth = stepItems[0].offsetWidth;
+      const stepMargin =
+        Number.parseInt(window.getComputedStyle(stepItems[0]).marginLeft) +
+        Number.parseInt(window.getComputedStyle(stepItems[0]).marginRight);
 
-    const handleHoverEnd = useCallback(() => {
-      setHoveredIndex(null);
-      setIsPaused(false);
-    }, [setHoveredIndex, setIsPaused]);
+      const totalWidth = (stepWidth + stepMargin) * steps.length;
+      setWidth(totalWidth);
+    };
 
+    // Initial calculation
+    calculateWidth();
+
+    // Set up ResizeObserver for responsive recalculation
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserverRef.current = new ResizeObserver(calculateWidth);
+      resizeObserverRef.current.observe(scrollerRef.current);
+    } else {
+      // Fallback for browsers without ResizeObserver
+      window.addEventListener("resize", calculateWidth);
+    }
+
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+      } else {
+        window.removeEventListener("resize", calculateWidth);
+      }
+    };
+  }, [steps.length]);
+
+  // Optimized GSAP animation with improved performance
+  useEffect(() => {
+    if (!scrollerRef.current || width === 0) return;
+
+    // Kill any existing animations
+    if (timelineRef.current) {
+      timelineRef.current.kill();
+    }
+
+    // Create a timeline with better performance settings
+    timelineRef.current = gsap.timeline({
+      repeat: -1,
+      defaults: {
+        ease: "none",
+        overwrite: "auto",
+      },
+    });
+
+    // Use transform for better performance
+    timelineRef.current.to(scrollerRef.current, {
+      x: -width,
+      duration: 15, // Speed control
+      force3D: true, // Hardware acceleration
+      onComplete: () => {
+        // Instant reset without visual jump
+        gsap.set(scrollerRef.current, { x: 0 });
+      },
+    });
+
+    // Control animation based on visibility and pause state
+    if (isInView && !isPaused) {
+      timelineRef.current.play();
+    } else {
+      timelineRef.current.pause();
+    }
+
+    return () => {
+      if (timelineRef.current) {
+        timelineRef.current.kill();
+      }
+    };
+  }, [width, isInView, isPaused]);
+
+  // Responsive item width calculation - memoized
+  const getItemWidth = useCallback(() => {
+    if (typeof window !== "undefined") {
+      if (window.innerWidth < 640) return 140; // Mobile
+      if (window.innerWidth < 1024) return 160; // Tablet
+      return 180; // Desktop
+    }
+    return 180; // Default
+  }, []);
+
+  // Optimized step item renderer with memoization
+  const StepItem = memo(({ step, index }) => {
     return (
       <motion.div
         className="step-item flex-shrink-0 flex flex-col items-center mx-3 sm:mx-4"
-        style={baseStyles}
-        onHoverStart={handleHoverStart}
-        onHoverEnd={handleHoverEnd}
+        style={{
+          width: getItemWidth(),
+          willChange: "transform", // Performance hint
+        }}
+        onHoverStart={() => {
+          setHoveredIndex(index);
+          setIsPaused(true);
+        }}
+        onHoverEnd={() => {
+          setHoveredIndex(null);
+          setIsPaused(false);
+        }}
         whileHover={{
           y: -5,
           transition: { type: "spring", stiffness: 300, damping: 20 },
@@ -175,7 +283,14 @@ const StepItem = memo(
       >
         <motion.div
           className="relative w-[50px] h-[50px] sm:w-[60px] sm:h-[60px] mb-3 rounded-xl flex items-center justify-center overflow-hidden"
-          style={iconContainerStyles}
+          style={{
+            backgroundColor: step.color,
+            boxShadow:
+              hoveredIndex === index
+                ? `0 10px 25px -5px ${step.accent}30`
+                : "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+            border: "1px solid rgba(255, 255, 255, 0.7)",
+          }}
           animate={{
             scale: hoveredIndex === index ? 1.05 : 1,
             boxShadow:
@@ -198,16 +313,15 @@ const StepItem = memo(
           {/* Modern glass effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/60 via-white/30 to-white/10"></div>
 
-          {/* Optimized image loading with priority for visible items */}
+          {/* Optimized image loading */}
           <Image
             src={step.thumbnail || "/placeholder.svg"}
             alt={step.title}
             height={40}
             width={40}
             className="w-[40px] h-[40px] object-contain relative z-10"
-            loading={index < 8 ? "eager" : "lazy"}
+            loading="lazy"
             decoding="async"
-            fetchPriority={index < 4 ? "high" : "auto"}
           />
 
           {/* Interactive highlight on hover - optimized animation */}
@@ -252,382 +366,50 @@ const StepItem = memo(
         )}
       </motion.div>
     );
-  },
-  (prevProps, nextProps) => {
-    // Custom comparison for React.memo to prevent unnecessary re-renders
-    return (
-      prevProps.index === nextProps.index &&
-      prevProps.hoveredIndex === nextProps.hoveredIndex &&
-      prevProps.itemWidth === nextProps.itemWidth
-    );
-  }
-);
-StepItem.displayName = "StepItem";
+  });
+  StepItem.displayName = "StepItem";
 
-// Optimized background blobs with requestAnimationFrame
-const FuturisticBlobs = memo(() => {
-  const blobsRef = useRef(null);
+  // Year 3000 futuristic enhancements
+  const FuturisticBlobs = memo(() => (
+    <>
+      <div className="absolute -top-10 left-1/4 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute -top-10 right-1/4 w-64 h-64 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute -bottom-32 left-1/3 w-64 h-64 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
 
-  useEffect(() => {
-    if (!blobsRef.current) return;
+      {/* Additional futuristic elements */}
+      <div className="absolute top-1/4 right-1/3 w-32 h-32 bg-cyan-100 rounded-full mix-blend-screen filter blur-2xl opacity-10 animate-pulse-slow"></div>
+      <div className="absolute bottom-1/4 left-1/3 w-24 h-24 bg-amber-100 rounded-full mix-blend-screen filter blur-2xl opacity-10 animate-float-slow"></div>
+    </>
+  ));
+  FuturisticBlobs.displayName = "FuturisticBlobs";
 
-    let rafId;
-    const startTime = performance.now();
-
-    const animateBlobs = (timestamp) => {
-      const elapsed = timestamp - startTime;
-      const blobs = blobsRef.current.querySelectorAll(".blob");
-
-      blobs.forEach((blob, index) => {
-        const delay = index * 2000;
-        const adjustedTime = ((elapsed + delay) % 7000) / 7000;
-
-        // Custom easing function for smoother motion
-        const x = Math.sin(adjustedTime * Math.PI * 2) * 30;
-        const y = Math.cos(adjustedTime * Math.PI * 2) * 50;
-        const scale = 0.9 + Math.sin(adjustedTime * Math.PI * 2) * 0.1;
-
-        blob.style.transform = `translate(${x}px, ${y}px) scale(${scale})`;
-      });
-
-      rafId = requestAnimationFrame(animateBlobs);
-    };
-
-    rafId = requestAnimationFrame(animateBlobs);
-
-    return () => {
-      cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  return (
-    <div
-      ref={blobsRef}
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-    >
-      <div className="blob absolute -top-10 left-1/4 w-64 h-64 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      <div className="blob absolute -top-10 right-1/4 w-64 h-64 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      <div className="blob absolute -bottom-32 left-1/3 w-64 h-64 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20"></div>
-      <div className="blob absolute top-1/4 right-1/3 w-32 h-32 bg-cyan-100 rounded-full mix-blend-screen filter blur-2xl opacity-10"></div>
-      <div className="blob absolute bottom-1/4 left-1/3 w-24 h-24 bg-amber-100 rounded-full mix-blend-screen filter blur-2xl opacity-10"></div>
-    </div>
-  );
-});
-FuturisticBlobs.displayName = "FuturisticBlobs";
-
-// Optimized scroll indicators with CSS variables for animation
-const ScrollIndicators = memo(() => {
-  return (
+  // Optimized scroll indicators
+  const ScrollIndicators = memo(() => (
     <div className="flex gap-1.5">
       {[0, 1, 2, 3].map((i) => (
-        <div
+        <motion.div
           key={i}
-          className="w-1.5 h-1.5 rounded-full bg-gray-300 animate-pulse-indicator"
-          style={{
-            "--delay": `${i * 0.5}s`,
-            animationDelay: `var(--delay)`,
+          className="w-1.5 h-1.5 rounded-full bg-gray-300"
+          animate={{
+            opacity: [0.3, 0.8, 0.3],
+            scale: [1, 1.2, 1],
+          }}
+          transition={{
+            duration: 2,
+            delay: i * 0.5,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "easeInOut",
+            repeatType: "mirror",
           }}
         />
       ))}
     </div>
-  );
-});
-ScrollIndicators.displayName = "ScrollIndicators";
-
-const Steps = () => {
-  // Use a worker for heavy calculations if available
-  const useWorker =
-    typeof Worker !== "undefined" && window.navigator.hardwareConcurrency > 2;
-
-  // Memoized steps data with Object.freeze to prevent mutations
-  const steps = useMemo(
-    () =>
-      Object.freeze([
-        {
-          badge: (
-            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-red-800 bg-red-50 border border-red-100 relative shadow-sm">
-              Step 1
-            </span>
-          ),
-          title: "Smart Discovery",
-          description: "AI-powered filtering predicts your preferences",
-          thumbnail: "/assets/home/steps/step-1.png",
-          color: "rgba(254, 226, 226, 0.3)",
-          accent: "#ef4444",
-        },
-        {
-          badge: (
-            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-indigo-800 bg-indigo-50 border border-indigo-100 relative shadow-sm">
-              Step 2
-            </span>
-          ),
-          title: "Instant Cart",
-          description: "One-tap selection with smart recommendations",
-          thumbnail: "/assets/home/steps/step-2.png",
-          color: "rgba(224, 231, 255, 0.3)",
-          accent: "#6366f1",
-        },
-        {
-          badge: (
-            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-yellow-800 bg-yellow-50 border border-yellow-100 relative shadow-sm">
-              Step 3
-            </span>
-          ),
-          title: "Express Delivery",
-          description: "Same-day delivery with real-time tracking",
-          thumbnail: "/assets/home/steps/step-3.png",
-          color: "rgba(254, 249, 195, 0.3)",
-          accent: "#eab308",
-        },
-        {
-          badge: (
-            <span className="inline-flex px-2.5 py-1 rounded-full text-xs font-medium text-purple-800 bg-purple-50 border border-purple-100 relative shadow-sm">
-              Step 4
-            </span>
-          ),
-          title: "Perfect Experience",
-          description: "Personalized support and seamless returns",
-          thumbnail: "/assets/home/steps/step-4.png",
-          color: "rgba(233, 213, 255, 0.3)",
-          accent: "#a855f7",
-        },
-      ]),
-    []
-  );
-
-  // Create multiple copies for smooth scrolling - memoized with optimal length
-  const allSteps = useMemo(() => {
-    // Calculate optimal number of repetitions based on viewport
-    const repetitions =
-      typeof window !== "undefined"
-        ? Math.ceil(window.innerWidth / (180 * steps.length)) + 2
-        : 4;
-
-    // Create array with optimal repetitions
-    const result = [];
-    for (let i = 0; i < repetitions; i++) {
-      result.push(...steps);
-    }
-    return Object.freeze(result);
-  }, [steps]);
-
-  // State and refs with proper typing
-  const [hoveredIndex, setHoveredIndex] = useState(null);
-  const [width, setWidth] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const containerRef = useRef(null);
-  const scrollerRef = useRef(null);
-  const timelineRef = useRef(null);
-  const resizeObserverRef = useRef(null);
-  const rafRef = useRef(null);
-  const isInView = useInView(containerRef, { amount: 0.1, once: false });
-
-  // Optimized width calculation with throttling
-  useEffect(() => {
-    if (!scrollerRef.current) return;
-
-    let ticking = false;
-    let lastWidth = 0;
-
-    const calculateWidth = () => {
-      if (!scrollerRef.current) return;
-
-      const stepItems = scrollerRef.current.querySelectorAll(".step-item");
-      if (stepItems.length === 0) return;
-
-      const stepWidth = stepItems[0].offsetWidth;
-      const stepMargin =
-        Number.parseInt(window.getComputedStyle(stepItems[0]).marginLeft) +
-        Number.parseInt(window.getComputedStyle(stepItems[0]).marginRight);
-
-      const totalWidth = (stepWidth + stepMargin) * steps.length;
-
-      // Only update state if width has changed significantly
-      if (Math.abs(totalWidth - lastWidth) > 5) {
-        lastWidth = totalWidth;
-        setWidth(totalWidth);
-      }
-
-      ticking = false;
-    };
-
-    const throttledCalculate = () => {
-      if (!ticking) {
-        rafRef.current = requestAnimationFrame(() => {
-          calculateWidth();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    // Initial calculation
-    calculateWidth();
-
-    // Set up ResizeObserver with throttling for responsive recalculation
-    if (typeof ResizeObserver !== "undefined") {
-      resizeObserverRef.current = new ResizeObserver(throttledCalculate);
-      resizeObserverRef.current.observe(scrollerRef.current);
-    } else {
-      // Fallback for browsers without ResizeObserver
-      window.addEventListener("resize", throttledCalculate);
-    }
-
-    return () => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      } else {
-        window.removeEventListener("resize", throttledCalculate);
-      }
-
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-    };
-  }, [steps.length]);
-
-  // Ultra-optimized GSAP animation with improved performance
-  useEffect(() => {
-    if (!scrollerRef.current || width === 0) return;
-
-    // Kill any existing animations
-    if (timelineRef.current) {
-      timelineRef.current.kill();
-    }
-
-    // Create a timeline with better performance settings
-    timelineRef.current = gsap.timeline({
-      repeat: -1,
-      defaults: {
-        ease: "none",
-        overwrite: "auto",
-      },
-    });
-
-    // Use transform for better performance with will-change optimization
-    gsap.set(scrollerRef.current, { willChange: "transform" });
-
-    // Calculate optimal animation duration based on content width
-    const duration = Math.max(15, width / 100);
-
-    timelineRef.current.to(scrollerRef.current, {
-      x: -width,
-      duration,
-      force3D: true, // Hardware acceleration
-      lazy: false, // Immediate initialization for smoother start
-      onComplete: () => {
-        // Instant reset without visual jump
-        gsap.set(scrollerRef.current, { x: 0 });
-      },
-    });
-
-    // Control animation based on visibility and pause state with optimized checks
-    const updateAnimation = () => {
-      if (isInView && !isPaused && timelineRef.current) {
-        timelineRef.current.play();
-      } else if (timelineRef.current) {
-        timelineRef.current.pause();
-      }
-    };
-
-    updateAnimation();
-
-    // Cleanup
-    return () => {
-      if (timelineRef.current) {
-        timelineRef.current.kill();
-        timelineRef.current = null;
-      }
-      gsap.set(scrollerRef.current, { willChange: "auto" });
-    };
-  }, [width, isInView, isPaused]);
-
-  // Responsive item width calculation - memoized with caching
-  const getItemWidth = useCallback(() => {
-    // Cache width calculations
-    if (!getItemWidth.cache) {
-      getItemWidth.cache = {};
-    }
-
-    if (typeof window !== "undefined") {
-      const windowWidth = window.innerWidth;
-
-      // Return cached value if available
-      if (getItemWidth.cache[windowWidth]) {
-        return getItemWidth.cache[windowWidth];
-      }
-
-      let result;
-      if (windowWidth < 640) result = 140; // Mobile
-      else if (windowWidth < 1024) result = 160; // Tablet
-      else result = 180; // Desktop
-
-      // Cache the result
-      getItemWidth.cache[windowWidth] = result;
-      return result;
-    }
-    return 180; // Default
-  }, []);
-
-  // Intersection Observer for pausing animations when not visible
-  useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting && timelineRef.current) {
-            timelineRef.current.pause();
-          } else if (entry.isIntersecting && timelineRef.current && !isPaused) {
-            timelineRef.current.play();
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    if (containerRef.current) {
-      observer.observe(containerRef.current);
-    }
-
-    return () => {
-      if (containerRef.current) {
-        observer.unobserve(containerRef.current);
-      }
-    };
-  }, [isPaused]);
-
-  // Preload images for smoother experience
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const preloadImages = () => {
-      steps.forEach((step) => {
-        if (step.thumbnail) {
-          const img = new Image();
-          img.src = step.thumbnail;
-        }
-      });
-    };
-
-    // Use requestIdleCallback if available, otherwise setTimeout
-    if ("requestIdleCallback" in window) {
-      window.requestIdleCallback(preloadImages);
-    } else {
-      setTimeout(preloadImages, 200);
-    }
-  }, [steps]);
+  ));
+  ScrollIndicators.displayName = "ScrollIndicators";
 
   return (
     <Container>
-      <div
-        ref={containerRef}
-        className="py-6 bg-white overflow-hidden"
-        style={{
-          contain: "content", // CSS containment for performance
-          contentVisibility: "auto", // Modern browsers optimization
-        }}
-      >
+      <div ref={containerRef} className="py-6  bg-white overflow-hidden">
         {/* Modern subtle gradient background */}
         <div className="relative mb-4">
           <FuturisticBlobs />
@@ -641,13 +423,7 @@ const Steps = () => {
         </div>
 
         {/* Carousel container with modern design - optimized */}
-        <div
-          className="relative overflow-hidden rounded-xl"
-          style={{
-            perspective: "1000px", // 3D acceleration hint
-            backfaceVisibility: "hidden",
-          }}
-        >
+        <div className="relative overflow-hidden rounded-xl">
           <div
             ref={scrollerRef}
             className="flex"
@@ -655,17 +431,11 @@ const Steps = () => {
               willChange: "transform",
               backfaceVisibility: "hidden", // Prevent flickering
               transform: "translateZ(0)", // Force GPU acceleration
-              WebkitFontSmoothing: "antialiased", // Text rendering optimization
-              WebkitOverflowScrolling: "touch", // iOS momentum scrolling
             }}
           >
-            <VirtualizedStepList
-              items={allSteps}
-              itemWidth={getItemWidth()}
-              hoveredIndex={hoveredIndex}
-              setHoveredIndex={setHoveredIndex}
-              setIsPaused={setIsPaused}
-            />
+            {allSteps.map((step, index) => (
+              <StepItem key={index} step={step} index={index} />
+            ))}
           </div>
         </div>
 
@@ -675,66 +445,58 @@ const Steps = () => {
         </div>
       </div>
 
-      {/* Optimized animations with CSS variables and reduced repaints */}
+      {/* Optimized animations with reduced repaints */}
       <style jsx global>{`
-        /* Use CSS variables for animation parameters */
-        :root {
-          --blob-duration: 7s;
-          --pulse-duration: 10s;
-          --float-duration: 15s;
-        }
-
-        /* Use CSS animations instead of keyframes in JS for better performance */
-        @keyframes pulse-indicator {
+        @keyframes blob {
           0%,
           100% {
-            opacity: 0.3;
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
+        }
+        .animate-blob {
+          animation: blob 7s infinite;
+        }
+        .animation-delay-2000 {
+          animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+          animation-delay: 4s;
+        }
+        @keyframes pulse-slow {
+          0%,
+          100% {
+            opacity: 0.1;
             transform: scale(1);
           }
           50% {
-            opacity: 0.8;
-            transform: scale(1.2);
+            opacity: 0.2;
+            transform: scale(1.1);
           }
         }
-
-        .animate-pulse-indicator {
-          animation: pulse-indicator 2s infinite;
-          animation-delay: var(--delay, 0s);
+        .animate-pulse-slow {
+          animation: pulse-slow 10s infinite;
         }
-
-        /* Optimize animations with will-change and transform */
-        .blob {
-          will-change: transform;
-          transform: translate(0, 0) scale(1);
+        @keyframes float-slow {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-20px);
+          }
         }
-
-        /* Use contain property for performance */
-        .step-item {
-          contain: layout style;
-        }
-
-        /* Optimize image rendering */
-        img {
-          image-rendering: auto;
-          transform: translateZ(0);
-        }
-
-        /* Optimize text rendering */
-        h2,
-        span,
-        p {
-          text-rendering: optimizeSpeed;
-        }
-
-        /* Optimize transitions */
-        * {
-          transition-property: transform, opacity;
-          transition-duration: 0.2s;
+        .animate-float-slow {
+          animation: float-slow 15s infinite;
         }
       `}</style>
     </Container>
   );
 };
 
-// Use React.memo for the entire component
-export default memo(Steps);
+export default Steps;
