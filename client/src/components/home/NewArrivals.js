@@ -184,13 +184,6 @@ const NewArrivals = () => {
           <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold">
             New Arrivals
           </h1>
-
-          {!productsLoading && products.length > 0 && (
-            <p className="text-sm text-gray-500">
-              Showing {Math.min(visibleProducts, products.length)} of{" "}
-              {products.length} products
-            </p>
-          )}
         </div>
 
         <div className="grid lg:grid-cols-4 md:grid-cols-2 grid-cols-1 md:gap-x-4 gap-y-4 relative">
