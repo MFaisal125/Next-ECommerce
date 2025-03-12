@@ -547,29 +547,21 @@ import { useDispatch } from "react-redux";
 import { setBrand } from "@/features/brand/brandSlice";
 import { setCategory } from "@/features/category/categorySlice";
 import { setStore } from "@/features/store/storeSlice";
-import Modal from "../shared/Modal";
 
-// Performance optimization: Intersection Observer for lazy loading
+// Ultra-optimized intersection observer hook
 const useIntersectionObserver = (options = {}) => {
   const [isIntersecting, setIsIntersecting] = useState(false);
   const [hasIntersected, setHasIntersected] = useState(false);
-
   const callbackRef = useCallback(
     (node) => {
-      if (node !== null) {
-        const observer = new IntersectionObserver(([entry]) => {
-          setIsIntersecting(entry.isIntersecting);
-          if (entry.isIntersecting && !hasIntersected) {
-            setHasIntersected(true);
-          }
-        }, options);
+      if (!node) return;
+      const observer = new IntersectionObserver(([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+        if (entry.isIntersecting && !hasIntersected) setHasIntersected(true);
+      }, options);
 
-        observer.observe(node);
-
-        return () => {
-          observer.disconnect();
-        };
-      }
+      observer.observe(node);
+      return () => observer.disconnect();
     },
     [hasIntersected, options]
   );
@@ -577,351 +569,97 @@ const useIntersectionObserver = (options = {}) => {
   return [callbackRef, isIntersecting, hasIntersected];
 };
 
-// Performance optimization: Debounce function
-const useDebounce = (value, delay) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
-// Futuristic 3030 NicheCard with enhanced hover effects
-const NicheCard = memo(({ item, onClick, type, index }) => {
+// Optimized NicheCard component
+const NicheCard = memo(({ item, onClick, index }) => {
   const [ref, isVisible] = useIntersectionObserver({
     rootMargin: "100px",
     threshold: 0.1,
   });
-  const [isHovered, setIsHovered] = useState(false);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const cardRef = useRef(null);
 
+  const [isLoaded, setIsLoaded] = useState(false);
   const imageUrl = item?.logo?.url || item?.thumbnail?.url;
   const imageAlt = item?.logo?.public_id || item?.thumbnail?.public_id;
   const productCount = item?.products?.length || 0;
 
-  // Handle mouse move for 3D effect
-  const handleMouseMove = useCallback((e) => {
-    if (!cardRef.current) return;
-
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-
-    setMousePosition({ x, y });
-  }, []);
-
-  // Reset position on mouse leave
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-    setMousePosition({ x: 0.5, y: 0.5 });
-  }, []);
-
-  // Animation style based on mouse position
-  const animationStyle = useMemo(() => {
-    if (!isHovered) return {};
-
-    const maxRotate = 8; // max rotation in degrees
-    const rotateX = (mousePosition.y - 0.5) * -maxRotate;
-    const rotateY = (mousePosition.x - 0.5) * maxRotate;
-
-    return {
-      transform: `
-        perspective(1000px) 
-        rotateX(${rotateX}deg) 
-        rotateY(${rotateY}deg)
-        translateZ(10px)
-        scale(1.02)
-      `,
-    };
-  }, [isHovered, mousePosition]);
-
-  // Optimized rendering with animation frame
+  // Load animation when visible
   useEffect(() => {
-    if (!cardRef.current) return;
-
-    let animationFrameId;
-
-    if (isHovered) {
-      const animate = () => {
-        if (cardRef.current) {
-          const { x, y } = mousePosition;
-          const rotateX = (y - 0.5) * -8;
-          const rotateY = (x - 0.5) * 8;
-
-          cardRef.current.style.transform = `
-            perspective(1000px) 
-            rotateX(${rotateX}deg) 
-            rotateY(${rotateY}deg)
-            translateZ(10px)
-            scale(1.02)
-          `;
-
-          // Glow effect position
-          const glowElement = cardRef.current.querySelector(".card-glow");
-          if (glowElement) {
-            glowElement.style.background = `
-              radial-gradient(
-                circle at ${x * 100}% ${y * 100}%, 
-                rgba(120, 190, 255, 0.4) 0%, 
-                rgba(65, 120, 255, 0.1) 30%, 
-                rgba(0, 0, 0, 0) 70%
-              )
-            `;
-          }
-        }
-
-        animationFrameId = requestAnimationFrame(animate);
-      };
-
-      animate();
-    } else {
-      // Reset to default state
-      if (cardRef.current) {
-        cardRef.current.style.transform =
-          "perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0) scale(1)";
-
-        const glowElement = cardRef.current.querySelector(".card-glow");
-        if (glowElement) {
-          glowElement.style.background = "none";
-        }
-      }
+    if (isVisible && !isLoaded) {
+      const timer = setTimeout(() => setIsLoaded(true), index * 30);
+      return () => clearTimeout(timer);
     }
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-    };
-  }, [isHovered, mousePosition]);
-
-  // Fade in animation when card becomes visible
-  const fadeInStyle = useMemo(
-    () => ({
-      opacity: isVisible ? 1 : 0,
-      transform: isVisible ? "translateY(0)" : "translateY(20px)",
-      transition: `opacity 0.5s ease, transform 0.5s ease ${Math.min(
-        index * 0.1,
-        0.3
-      )}s`,
-    }),
-    [isVisible, index]
-  );
+  }, [isVisible, isLoaded, index]);
 
   return (
     <div
-      ref={(el) => {
-        // Combine refs safely using callback ref pattern
-        if (typeof ref === "function") ref(el);
-        cardRef.current = el;
-      }}
-      className="group relative flex flex-col sm:flex-row md:flex-col gap-4 p-4 rounded-xl bg-white/90 backdrop-blur-sm border border-gray-100/50 hover:border-transparent transition-all duration-300 cursor-pointer overflow-hidden"
+      ref={ref}
+      className={`group relative flex flex-col gap-3 p-3 rounded-lg bg-white border border-gray-100/50 transition-all duration-200 cursor-pointer ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+      } ${isLoaded ? "shadow-sm" : ""}`}
       style={{
-        ...fadeInStyle,
-        boxShadow: isHovered
-          ? "0 25px 50px -12px rgba(0, 120, 255, 0.25), 0 0 15px rgba(0, 120, 255, 0.1)"
-          : "0 10px 30px -15px rgba(0,0,0,0.1)",
-        transition: "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
-        transformStyle: "preserve-3d",
+        transition: `all 0.2s ease ${Math.min(index * 0.03, 0.1)}s`,
       }}
       onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      onMouseMove={handleMouseMove}
     >
-      {/* 3030 Futuristic Glow Effect */}
-      <div className="card-glow absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-
-      {/* Animated border */}
-      <div
-        className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background:
-            "linear-gradient(45deg, #00f2fe, #4facfe, #0070f3, #00f2fe)",
-          backgroundSize: "300% 300%",
-          animation: "shimmer 3s linear infinite",
-          padding: "1.5px",
-          mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-          maskComposite: "exclude",
-        }}
-      />
-
-      {/* Holographic effect */}
-      <div
-        className="absolute inset-0 bg-gradient-to-br from-white/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          backgroundSize: "200% 200%",
-          animation: "holographic 5s linear infinite",
-        }}
-      />
-
-      {/* Image container with 3030 hover effects */}
-      <div
-        className="relative flex-shrink-0 z-10"
-        style={{ transform: "translateZ(20px)" }}
-      >
-        <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg opacity-0 group-hover:opacity-50 blur-md transition-opacity duration-300" />
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-300/30 via-blue-500/30 to-purple-500/30 rounded-lg opacity-0 group-hover:opacity-100 animate-pulse-slow" />
+      {/* Image */}
+      <div className="relative flex-shrink-0">
         <Image
           src={imageUrl || "/placeholder.svg"}
           alt={imageAlt || "Thumbnail"}
-          width={60}
-          height={60}
-          className="relative rounded-lg h-[60px] w-[60px] object-cover transition-transform duration-300 group-hover:scale-110"
+          width={50}
+          height={50}
+          className="rounded h-[50px] w-[50px] object-cover"
           loading={index < 3 ? "eager" : "lazy"}
         />
+      </div>
 
-        {/* Futuristic scan line */}
-        <div className="absolute inset-0 overflow-hidden rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="absolute left-0 right-0 h-[2px] bg-blue-400/70 -translate-y-full group-hover:animate-scan-line" />
+      {/* Content */}
+      <div className="flex flex-col gap-2 min-w-0">
+        <h2 className="text-base font-medium line-clamp-1">{item?.title}</h2>
+        <div className="flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+            <BsBoxSeam className="w-3 h-3" />
+            <span>{productCount} Products</span>
+          </span>
         </div>
       </div>
 
-      {/* Content container with 3030 styling */}
-      <div
-        className="flex flex-col flex-grow gap-3 min-w-0 z-10"
-        style={{ transform: "translateZ(15px)" }}
-      >
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold leading-tight line-clamp-2 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 group-hover:from-blue-600 group-hover:to-indigo-600 transition-colors duration-300">
-            {item?.title}
-          </h2>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-600 group-hover:bg-blue-100 group-hover:shadow-inner transition-all duration-300">
-              <BsBoxSeam className="w-3.5 h-3.5" />
-              <span className="relative overflow-hidden">
-                <span className="block group-hover:translate-y-full transition-transform duration-300">
-                  {productCount} Products
-                </span>
-                <span className="absolute inset-0 -translate-y-full group-hover:translate-y-0 text-blue-700 transition-transform duration-300">
-                  {productCount} Products
-                </span>
-              </span>
-            </span>
-          </div>
-        </div>
-
-        {/* Tags with horizontal scroll and 3030 hover effects */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-          {item.tags.map((tag, idx) => (
-            <span
-              key={idx}
-              className="flex-none text-xs px-2.5 py-1 rounded-full bg-gray-50 text-gray-600 border border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-all duration-300 transform group-hover:scale-105"
-              style={{
-                transitionDelay: `${idx * 0.05}s`,
-                transform: isHovered
-                  ? `translateZ(${20 + idx * 2}px)`
-                  : "translateZ(0)",
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+      {/* Tags */}
+      <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
+        {item.tags.slice(0, 3).map((tag, idx) => (
+          <span
+            key={idx}
+            className="flex-none text-xs px-2 py-0.5 rounded-full border border-gray-100 bg-gray-50 text-gray-600 whitespace-nowrap"
+          >
+            {tag}
+          </span>
+        ))}
       </div>
-
-      {/* Particle effects on hover */}
-      {isHovered && <Particles />}
     </div>
   );
 });
 NicheCard.displayName = "NicheCard";
 
-// Futuristic particle effect component
-const Particles = memo(() => {
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 10 }, (_, i) => ({
-        id: i,
-        size: Math.random() * 3 + 1,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        duration: Math.random() * 2 + 1,
-        delay: Math.random(),
-      })),
-    []
-  );
-
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {particles.map((particle) => (
-        <div
-          key={particle.id}
-          className="absolute rounded-full bg-blue-400"
-          style={{
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            left: `${particle.x}%`,
-            top: `${particle.y}%`,
-            opacity: 0,
-            animation: `particle ${particle.duration}s ease-out ${particle.delay}s infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-});
-Particles.displayName = "Particles";
-
-// Optimized tab navigation for mobile with 3030 styling
+// Optimized tab navigation
 const TabNavigation = memo(({ niches, selectedNiche, onSelect }) => {
   return (
     <div className="flex justify-center w-full overflow-hidden">
-      <div className="flex gap-2 p-1.5 bg-gray-100/80 backdrop-blur-sm rounded-full overflow-x-auto scrollbar-hide max-w-full mx-auto shadow-inner">
+      <div className="flex gap-1 p-1 bg-gray-100 rounded-full overflow-x-auto scrollbar-hide max-w-full mx-auto">
         {niches.map((niche, index) => (
           <button
             key={index}
             onClick={() => onSelect(niche.title)}
             className={`
-              relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap
-              transition-all duration-500 transform overflow-hidden
+              flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap
+              transition-all duration-200
               ${
                 selectedNiche === niche.title
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 scale-105"
+                  ? "bg-blue-600 text-white"
                   : "text-gray-600 hover:bg-white/70"
               }
             `}
           >
-            {/* Animated background for selected tab */}
-            {selectedNiche === niche.title && (
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-100"
-                style={{
-                  backgroundSize: "200% 200%",
-                  animation: "shimmer 2s linear infinite",
-                }}
-              />
-            )}
-
-            {/* Icon with glow effect */}
-            <span
-              className={`relative w-4 h-4 z-10 transition-transform duration-300 ${
-                selectedNiche === niche.title ? "scale-110" : ""
-              }`}
-            >
-              {niche.icon}
-              {selectedNiche === niche.title && (
-                <span className="absolute inset-0 bg-white/20 rounded-full blur-sm animate-pulse-slow" />
-              )}
-            </span>
-
-            {/* Text with reveal animation */}
-            <span className="relative z-10">{niche.title}</span>
-
-            {/* Scan line for selected tab */}
-            {selectedNiche === niche.title && (
-              <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute left-0 right-0 h-[1px] bg-white/50 top-0 animate-scan-line-horizontal" />
-              </div>
-            )}
+            <span className="w-3.5 h-3.5">{niche.icon}</span>
+            <span>{niche.title}</span>
           </button>
         ))}
       </div>
@@ -930,11 +668,12 @@ const TabNavigation = memo(({ niches, selectedNiche, onSelect }) => {
 });
 TabNavigation.displayName = "TabNavigation";
 
-// Optimized DetailModal with 3030 styling
+// Optimized modal component
 const DetailModal = memo(({ isOpen, onClose, data, type }) => {
   const creator = data?.creator || data?.owner;
   const products = data?.products || [];
-  const [activeIndex, setActiveIndex] = useState(-1);
+  const modalContentRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   const handleProductClick = useCallback((product) => {
     window.open(
@@ -945,426 +684,173 @@ const DetailModal = memo(({ isOpen, onClose, data, type }) => {
     );
   }, []);
 
+  // Reset scroll position
+  useEffect(() => {
+    if (isOpen && modalContentRef.current) {
+      modalContentRef.current.scrollTop = 0;
+    }
+  }, [isOpen, data]);
+
+  // Check for mobile device
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   if (!isOpen) return null;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      className="p-0 lg:w-1/3 md:w-3/4 w-full max-h-[80vh] overflow-hidden rounded-2xl bg-white/95 backdrop-blur-sm shadow-2xl border border-blue-100"
-    >
-      <div className="h-full w-full flex flex-col">
-        {/* Header with 3030 styling */}
-        <div className="relative p-6 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600 text-white rounded-t-xl overflow-hidden">
-          {/* Animated background */}
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-600"
-            style={{
-              backgroundSize: "200% 200%",
-              animation: "shimmer 8s linear infinite",
-            }}
-          />
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm"
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
-          {/* Geometric patterns */}
-          <div className="absolute inset-0 opacity-10">
+      {/* Modal Content */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+          className="w-full lg:w-1/3 md:w-3/4 overflow-hidden rounded-lg bg-white shadow-xl border border-gray-200"
+          style={{
+            maxWidth: "500px",
+            maxHeight: isMobile ? "85vh" : "80vh",
+          }}
+        >
+          <div className="h-full w-full flex flex-col">
+            {/* Header */}
+            <div className="relative p-4 bg-blue-600 text-white">
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors z-10"
+                aria-label="Close modal"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+
+              {/* Creator info */}
+              <div className="flex flex-col items-center">
+                <Image
+                  src={creator?.avatar?.url || "/placeholder.svg"}
+                  alt={creator?.avatar?.public_id || "Creator avatar"}
+                  width={50}
+                  height={50}
+                  className="rounded-full h-[50px] w-[50px] object-cover border-2 border-white/80"
+                />
+                <h1 className="text-base font-medium mt-2">{creator?.name}</h1>
+                <p className="text-xs text-white/80">{creator?.email}</p>
+                <p className="text-xs text-white/70">{creator?.phone}</p>
+              </div>
+            </div>
+
+            {/* Products list */}
             <div
-              className="absolute top-0 left-0 w-full h-full"
+              ref={modalContentRef}
+              className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-50"
               style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)",
-                backgroundSize: "20px 20px",
+                maxHeight: isMobile
+                  ? "calc(85vh - 130px)"
+                  : "calc(80vh - 150px)",
               }}
-            />
-          </div>
-
-          {/* Close button with hover effect */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 transition-colors z-10 overflow-hidden group"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              className="relative z-10"
+              onClick={(e) => e.stopPropagation()}
             >
-              <path
-                d="M12 4L4 12M4 4L12 12"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity overflow-hidden">
-              <div className="absolute left-0 right-0 h-[1px] bg-white/50 top-0 group-hover:animate-scan-line-horizontal" />
-            </div>
-          </button>
+              <h2 className="text-xs font-medium text-gray-600 px-2 py-1.5 sticky top-0 bg-white/90 backdrop-blur-sm rounded shadow-sm z-10">
+                {products.length} Products
+              </h2>
 
-          {/* Creator info with 3030 styling */}
-          <div className="flex flex-col items-center relative z-10">
-            <div className="relative mb-3 group">
-              <div className="absolute -inset-1 bg-white rounded-full opacity-30 blur-md group-hover:opacity-50 transition-opacity" />
-              <div className="absolute -inset-3 bg-blue-400/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity blur-xl" />
-              <Image
-                src={creator?.avatar?.url || "/placeholder.svg"}
-                alt={creator?.avatar?.public_id || "Creator avatar"}
-                width={70}
-                height={70}
-                className="rounded-full h-[70px] w-[70px] object-cover relative z-10 border-2 border-white/80 group-hover:scale-105 transition-transform"
-              />
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                <div className="absolute left-0 right-0 h-[2px] bg-white/50 -translate-y-full group-hover:animate-scan-line" />
-              </div>
-            </div>
-            <h1 className="text-xl font-semibold">{creator?.name}</h1>
-            <p className="text-sm text-white/80">{creator?.email}</p>
-            <p className="text-xs text-white/70 mt-1">{creator?.phone}</p>
-          </div>
-        </div>
-
-        {/* Products list with 3030 hover effects */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-blue-50/50 to-white/50">
-          <h2 className="text-sm font-medium text-blue-600 px-2 flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-            {products.length} Products
-          </h2>
-
-          <div className="space-y-3">
-            {products.map((product, index) => (
-              <div
-                key={product?._id}
-                onClick={() => handleProductClick(product)}
-                onMouseEnter={() => setActiveIndex(index)}
-                onMouseLeave={() => setActiveIndex(-1)}
-                className="flex items-start gap-3 p-3 rounded-xl bg-white/80 hover:bg-blue-50/80 transition-all duration-300 cursor-pointer border border-transparent hover:border-blue-100 relative overflow-hidden group"
-                style={{
-                  transform: activeIndex === index ? "scale(1.02)" : "scale(1)",
-                  boxShadow:
-                    activeIndex === index
-                      ? "0 10px 25px -5px rgba(59, 130, 246, 0.1)"
-                      : "none",
-                }}
-              >
-                {/* Hover border effect */}
-                {activeIndex === index && (
+              <div className="space-y-2">
+                {products.map((product) => (
                   <div
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{
-                      background:
-                        "linear-gradient(45deg, #00f2fe, #4facfe, #00f2fe)",
-                      backgroundSize: "200% 200%",
-                      animation: "shimmer 2s linear infinite",
-                      padding: "1px",
-                      mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                      maskComposite: "exclude",
-                    }}
-                  />
-                )}
+                    key={product?._id}
+                    onClick={() => handleProductClick(product)}
+                    className="flex items-start gap-2 p-2 rounded-lg bg-white hover:bg-blue-50/80 transition-all duration-200 cursor-pointer border border-gray-100 hover:border-blue-100"
+                  >
+                    {/* Product image */}
+                    <Image
+                      src={product?.thumbnail?.url || "/placeholder.svg"}
+                      alt={product?.thumbnail?.public_id || "Product thumbnail"}
+                      width={36}
+                      height={36}
+                      className="rounded h-[36px] w-[36px] object-cover"
+                    />
 
-                {/* Product image with hover effect */}
-                <div className="relative">
-                  <div className="absolute -inset-1 bg-blue-400/0 group-hover:bg-blue-400/20 rounded-lg transition-colors blur-sm" />
-                  <Image
-                    src={product?.thumbnail?.url || "/placeholder.svg"}
-                    alt={product?.thumbnail?.public_id || "Product thumbnail"}
-                    width={40}
-                    height={40}
-                    className="rounded-lg h-[40px] w-[40px] object-cover relative z-10 group-hover:scale-105 transition-transform"
-                  />
-                </div>
-
-                {/* Product details with hover animations */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium line-clamp-1 group-hover:text-blue-700 transition-colors">
-                    {product?.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 mt-0.5 group-hover:text-gray-700 transition-colors">
-                    {product?.summary}
-                  </p>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 mt-2 group-hover:bg-blue-100 transition-colors">
-                    ${product?.price}
-                  </span>
-                </div>
-
-                {/* Scan line effect on hover */}
-                <div className="absolute inset-0 overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute left-0 right-0 h-[1px] bg-blue-400/30 -translate-y-full group-hover:animate-scan-line" />
-                </div>
+                    {/* Product details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xs font-medium line-clamp-1">
+                        {product?.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
+                        {product?.summary}
+                      </p>
+                      <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 mt-1">
+                        ${product?.price}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {products.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-              <svg
-                width="40"
-                height="40"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M20 7H4a1 1 0 00-1 1v10a1 1 0 001 1h16a1 1 0 001-1V8a1 1 0 00-1-1z" />
-                <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
-              </svg>
-              <p className="mt-2 text-sm">No products found</p>
+              {products.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+                  <p className="text-xs">No products found</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </Modal>
+    </>
   );
 });
 DetailModal.displayName = "DetailModal";
 
-// Main component with performance optimizations
-const NicheExplorer = () => {
-  const [selectedNiche, setSelectedNiche] = useState("Category");
-  const [modalData, setModalData] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const dispatch = useDispatch();
-
-  // Memoize niches to prevent unnecessary re-renders
-  const niches = useMemo(
-    () => [
-      { title: "Brand", icon: <Brand /> },
-      { title: "Category", icon: <Category /> },
-      { title: "Store", icon: <Store /> },
-    ],
-    []
-  );
-
-  // Optimized tab click handler
-  const handleTabClick = useCallback(
-    (nicheTitle) => {
-      if (selectedNiche !== nicheTitle) {
-        setSelectedNiche(nicheTitle);
-      }
-    },
-    [selectedNiche]
-  );
-
-  // Optimized modal handlers
-  const handleOpenModal = useCallback(
-    (data, type) => {
-      if (type === "Brand") dispatch(setBrand(data));
-      else if (type === "Category") dispatch(setCategory(data));
-      else if (type === "Store") dispatch(setStore(data));
-
-      setModalData(data);
-      setIsModalOpen(true);
-    },
-    [dispatch]
-  );
-
-  // Close modal with cleanup
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    // Clean up modal data after animation completes
-    setTimeout(() => {
-      if (!isModalOpen) setModalData(null);
-    }, 300);
-  }, [isModalOpen]);
-
-  return (
-    <Container>
-      <section className="flex flex-col gap-y-6 sm:gap-y-10">
-        {/* Title */}
-        <h1 className="text-2xl sm:text-4xl px-4">
-          Top Exploring. <span className="">By Niche</span>
-        </h1>
-
-        {/* Main content with 3030 styling */}
-        <div className="bg-gradient-to-b from-gray-50/80 to-white/60 backdrop-blur-sm rounded-2xl border border-gray-100/50 shadow-xl shadow-blue-500/5 p-4 sm:p-6 md:p-8 lg:p-12 relative overflow-hidden">
-          {/* Background elements */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div
-              className="absolute top-0 left-0 w-full h-full opacity-5"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(59, 130, 246, 0.4) 1px, transparent 1px)",
-                backgroundSize: "30px 30px",
-              }}
-            />
-            <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-10 blur-3xl" />
-            <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-200 rounded-full opacity-10 blur-3xl" />
-          </div>
-
-          {/* Tab navigation */}
-          <div className="mb-6 sm:mb-8 relative z-10">
-            <TabNavigation
-              niches={niches}
-              selectedNiche={selectedNiche}
-              onSelect={handleTabClick}
-            />
-          </div>
-
-          {/* Content area with optimized loading */}
-          <Suspense fallback={<LoadingGrid />}>
-            <div className="space-y-4 relative z-10">
-              {selectedNiche === "Brand" && (
-                <DisplayBrands
-                  onItemClick={(data) => handleOpenModal(data, "Brand")}
-                />
-              )}
-              {selectedNiche === "Category" && (
-                <DisplayCategories
-                  onItemClick={(data) => handleOpenModal(data, "Category")}
-                />
-              )}
-              {selectedNiche === "Store" && (
-                <DisplayStores
-                  onItemClick={(data) => handleOpenModal(data, "Store")}
-                />
-              )}
-            </div>
-          </Suspense>
-        </div>
-      </section>
-
-      {/* Modal with optimized rendering */}
-      {isModalOpen && modalData && (
-        <DetailModal
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          data={modalData}
-          type={selectedNiche}
-        />
-      )}
-
-      {/* Animations */}
-      <style jsx global>{`
-        @keyframes shimmer {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-
-        @keyframes holographic {
-          0% {
-            opacity: 0.3;
-          }
-          50% {
-            opacity: 0.7;
-          }
-          100% {
-            opacity: 0.3;
-          }
-        }
-
-        @keyframes scan-line {
-          0% {
-            transform: translateY(-100%);
-          }
-          100% {
-            transform: translateY(100%);
-          }
-        }
-
-        @keyframes scan-line-horizontal {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-
-        @keyframes pulse-slow {
-          0% {
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.5;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-
-        @keyframes particle {
-          0% {
-            transform: translateY(0);
-            opacity: 0;
-          }
-          50% {
-            opacity: 0.8;
-          }
-          100% {
-            transform: translateY(-20px);
-            opacity: 0;
-          }
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-    </Container>
-  );
-};
-
-// Optimized loading grid with 3030 styling
+// Optimized loading grid
 const LoadingGrid = memo(() => (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
     {[1, 2, 3].map((_, index) => (
       <div
         key={index}
-        className="animate-pulse relative overflow-hidden rounded-xl"
+        className="animate-pulse relative overflow-hidden rounded-lg"
       >
         <Niche />
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute left-0 right-0 h-[2px] bg-blue-200/50 -translate-y-full animate-scan-line" />
-        </div>
       </div>
     ))}
   </div>
 ));
 LoadingGrid.displayName = "LoadingGrid";
 
-// Empty state with 3030 styling
+// Empty state component
 const EmptyState = memo(({ message }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-gray-400 relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-to-b from-blue-50/20 to-transparent rounded-xl opacity-50" />
-    <div className="relative z-10 flex flex-col items-center">
-      <div className="relative mb-4">
-        <div className="absolute -inset-4 bg-blue-100/20 rounded-full blur-xl animate-pulse-slow" />
-        <svg
-          className="w-16 h-16 relative"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.5}
-            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-          />
-        </svg>
-      </div>
-      <p className="text-lg font-medium bg-clip-text text-transparent bg-gradient-to-r from-gray-500 to-gray-400">
-        {message}
-      </p>
-    </div>
+  <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+    <svg
+      className="w-10 h-10"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.5}
+        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+      />
+    </svg>
+    <p className="text-sm mt-2">{message}</p>
   </div>
 ));
 EmptyState.displayName = "EmptyState";
 
-// Display components with optimized rendering
+// Display components
 const DisplayBrands = memo(({ onItemClick }) => {
   const {
     data: brandsData,
@@ -1375,7 +861,7 @@ const DisplayBrands = memo(({ onItemClick }) => {
   });
   const brands = useMemo(() => brandsData?.data || [], [brandsData]);
 
-  // Optimized error handling
+  // Error handling
   useEffect(() => {
     if (brandsError) {
       toast.error(brandsError?.data?.description, { id: "brands-error" });
@@ -1383,18 +869,15 @@ const DisplayBrands = memo(({ onItemClick }) => {
   }, [brandsError]);
 
   if (isLoading) return <LoadingGrid />;
-  if (brands.length === 0) {
-    return <EmptyState message="No brands found" />;
-  }
+  if (brands.length === 0) return <EmptyState message="No brands found" />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {brands.slice(0, 6).map((brand, index) => (
         <NicheCard
           key={brand._id}
           item={brand}
           onClick={() => onItemClick(brand)}
-          type="brand"
           index={index}
         />
       ))}
@@ -1425,18 +908,16 @@ const DisplayCategories = memo(({ onItemClick }) => {
   }, [categoriesError]);
 
   if (isLoading) return <LoadingGrid />;
-  if (categories.length === 0) {
+  if (categories.length === 0)
     return <EmptyState message="No categories found" />;
-  }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {categories.slice(0, 6).map((category, index) => (
         <NicheCard
           key={category._id}
           item={category}
           onClick={() => onItemClick(category)}
-          type="category"
           index={index}
         />
       ))}
@@ -1462,18 +943,15 @@ const DisplayStores = memo(({ onItemClick }) => {
   }, [storesError]);
 
   if (isLoading) return <LoadingGrid />;
-  if (stores.length === 0) {
-    return <EmptyState message="No stores found" />;
-  }
+  if (stores.length === 0) return <EmptyState message="No stores found" />;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {stores.slice(0, 6).map((store, index) => (
         <NicheCard
           key={store._id}
           item={store}
           onClick={() => onItemClick(store)}
-          type="store"
           index={index}
         />
       ))}
@@ -1482,4 +960,117 @@ const DisplayStores = memo(({ onItemClick }) => {
 });
 DisplayStores.displayName = "DisplayStores";
 
-export default NicheExplorer;
+// Main component
+const NicheExplorer = () => {
+  const [selectedNiche, setSelectedNiche] = useState("Category");
+  const [modalData, setModalData] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const dispatch = useDispatch();
+
+  // Memoize niches
+  const niches = useMemo(
+    () => [
+      { title: "Brand", icon: <Brand /> },
+      { title: "Category", icon: <Category /> },
+      { title: "Store", icon: <Store /> },
+    ],
+    []
+  );
+
+  // Tab click handler
+  const handleTabClick = useCallback(
+    (nicheTitle) => {
+      if (selectedNiche !== nicheTitle) {
+        setSelectedNiche(nicheTitle);
+      }
+    },
+    [selectedNiche]
+  );
+
+  // Modal handlers
+  const handleOpenModal = useCallback(
+    (data, type) => {
+      if (type === "Brand") dispatch(setBrand(data));
+      else if (type === "Category") dispatch(setCategory(data));
+      else if (type === "Store") dispatch(setStore(data));
+
+      setModalData(data);
+      setIsModalOpen(true);
+    },
+    [dispatch]
+  );
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setTimeout(() => {
+      if (!isModalOpen) setModalData(null);
+    }, 200);
+  }, [isModalOpen]);
+
+  return (
+    <Container>
+      <section className="flex flex-col gap-y-4">
+        {/* Title */}
+        <h1 className="text-xl sm:text-2xl px-2">
+          Top Exploring. <span>By Niche</span>
+        </h1>
+
+        {/* Main content */}
+        <div className="bg-gray-50 rounded-lg border border-gray-100 p-3 sm:p-4 relative">
+          {/* Tab navigation */}
+          <div className="mb-4 relative z-10">
+            <TabNavigation
+              niches={niches}
+              selectedNiche={selectedNiche}
+              onSelect={handleTabClick}
+            />
+          </div>
+
+          {/* Content area */}
+          <Suspense fallback={<LoadingGrid />}>
+            <div className="relative z-10">
+              {selectedNiche === "Brand" && (
+                <DisplayBrands
+                  onItemClick={(data) => handleOpenModal(data, "Brand")}
+                />
+              )}
+              {selectedNiche === "Category" && (
+                <DisplayCategories
+                  onItemClick={(data) => handleOpenModal(data, "Category")}
+                />
+              )}
+              {selectedNiche === "Store" && (
+                <DisplayStores
+                  onItemClick={(data) => handleOpenModal(data, "Store")}
+                />
+              )}
+            </div>
+          </Suspense>
+        </div>
+      </section>
+
+      {/* Modal */}
+      {isModalOpen && modalData && (
+        <DetailModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          data={modalData}
+          type={selectedNiche}
+        />
+      )}
+
+      {/* Minimal CSS */}
+      <style jsx global>{`
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
+    </Container>
+  );
+};
+
+export default memo(NicheExplorer);
