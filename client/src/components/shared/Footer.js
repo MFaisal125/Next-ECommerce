@@ -407,17 +407,17 @@ const Footer = memo(() => {
       paths: [
         {
           name: "Facebook",
-          path: "https://www.facebook.com/devhasibulislam/",
+          path: "https://www.linkedin.com/in/m-faisal125/",
           icon: <IoLogoFacebook className="text-blue-600" />,
         },
         {
           name: "LinkedIn",
-          path: "https://www.linkedin.com/in/devhasibulislam/",
+          path: "https://www.linkedin.com/in/m-faisal125/",
           icon: <IoLogoLinkedin className="text-blue-700" />,
         },
         {
           name: "GitHub",
-          path: "https://github.com/devhasibulislam/",
+          path: "https://github.com/MFaisal125/",
           icon: <IoLogoGithub className="text-gray-700" />,
         },
       ],
