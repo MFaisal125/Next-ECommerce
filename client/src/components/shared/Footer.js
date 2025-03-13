@@ -165,7 +165,7 @@
 
 "use client";
 
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, memo, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -181,262 +181,368 @@ import {
   IoLeafOutline,
   IoShieldOutline,
   IoHeartOutline,
+  IoPlanetOutline,
+  IoSparklesOutline,
+  IoScanOutline,
+  IoLayersOutline,
 } from "react-icons/io5";
 
 // Ultra-optimized footer section component
 const FooterSection = memo(
-  ({ sitemap, index, activeDropdown, toggleDropdown }) => {
+  ({ sitemap, index, activeDropdown, toggleDropdown, isMobile }) => {
     if (!sitemap.name) return null;
 
+    // Determine color based on index - memoized for performance
+    const colors = useMemo(
+      () => ["blue", "purple", "cyan", "indigo", "violet", "blue", "teal"],
+      []
+    );
+    const color = useMemo(() => {
+      return colors[index % colors.length];
+    }, [index, colors]);
+
     return (
-      <div className="flex flex-col">
-        {/* Section header - desktop */}
-        <div className="hidden md:flex items-center gap-1 mb-1.5">
-          <span className="text-sm">
-            {sitemap.icon || (
-              <IoAccessibilityOutline className="text-blue-500" />
-            )}
+      <div
+        className={`
+          flex flex-col relative overflow-hidden
+          ${
+            isMobile
+              ? "bg-white rounded-lg shadow-sm border border-gray-100"
+              : ""
+          }
+        `}
+        style={{
+          animation: isMobile ? `fadeIn 0.3s ${index * 0.05}s both` : "none",
+        }}
+      >
+        {/* Desktop section header */}
+        <div className="hidden md:flex items-center gap-1.5 mb-2">
+          <span className={`text-${color}-500`}>
+            {sitemap.icon || <IoAccessibilityOutline />}
           </span>
           <h2 className="text-xs font-medium text-gray-800">{sitemap.name}</h2>
         </div>
 
-        {/* Section header with dropdown - mobile */}
+        {/* Mobile section header with dropdown */}
         <button
-          className="md:hidden flex items-center justify-between w-full py-1 px-2 bg-white/80 active:bg-blue-50 transition-colors"
+          className={`
+            md:hidden flex items-center justify-between w-full py-2 px-3
+            bg-white active:bg-gray-50 transition-colors
+            ${activeDropdown === index ? `border-b border-${color}-100` : ""}
+          `}
           onClick={() => toggleDropdown(index)}
         >
-          <div className="flex items-center gap-1">
-            <span className="text-xs">
-              {sitemap.icon || (
-                <IoAccessibilityOutline className="text-blue-500" />
-              )}
+          <div className="flex items-center gap-2">
+            <span className={`text-${color}-500`}>
+              {sitemap.icon || <IoAccessibilityOutline />}
             </span>
             <h2 className="text-xs font-medium text-gray-800">
               {sitemap.name}
             </h2>
           </div>
-          {activeDropdown === index ? (
-            <IoChevronUp className="text-blue-500 text-xs" />
-          ) : (
-            <IoChevronDown className="text-blue-500 text-xs" />
-          )}
+          <div
+            className={`w-5 h-5 flex items-center justify-center rounded-full bg-${color}-50`}
+          >
+            {activeDropdown === index ? (
+              <IoChevronUp className={`text-${color}-500 text-xs`} />
+            ) : (
+              <IoChevronDown className={`text-${color}-500 text-xs`} />
+            )}
+          </div>
         </button>
 
-        {/* Links - desktop */}
-        <div className="hidden md:flex flex-col space-y-1 mt-1">
+        {/* Desktop links */}
+        <div className="hidden md:flex flex-col space-y-1.5 mt-1">
           {sitemap?.paths?.slice(0, 4).map((path, pathIndex) => (
             <Link
               key={pathIndex}
               href={path?.path}
-              className="text-xs text-gray-600 hover:text-blue-600 transition-colors"
+              className={`text-xs text-gray-600 hover:text-${color}-600 transition-colors`}
             >
-              <div className="flex items-center gap-1">
-                {path.icon && <span className="text-xs">{path.icon}</span>}
+              <div className="flex items-center gap-1.5">
+                {path.icon && (
+                  <span className={`text-${color}-500 text-xs`}>
+                    {path.icon}
+                  </span>
+                )}
                 <span>{path?.name}</span>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* Links with dropdown - mobile */}
-        {activeDropdown === index && (
-          <div className="md:hidden overflow-hidden">
-            <div className="flex flex-col space-y-1 mt-1 pl-2 border-l border-blue-100">
-              {sitemap?.paths?.slice(0, 4).map((path, pathIndex) => (
-                <Link
-                  key={pathIndex}
-                  href={path?.path}
-                  className="text-xs text-gray-600 hover:text-blue-600 transition-colors"
+        {/* Mobile links with dropdown - optimized with height transition */}
+        <div
+          className="md:hidden overflow-hidden transition-all duration-200 ease-in-out"
+          style={{
+            maxHeight:
+              activeDropdown === index
+                ? `${sitemap?.paths?.length * 32 + 16}px`
+                : "0px",
+          }}
+        >
+          <div className="flex flex-col py-1 px-3 bg-gray-50">
+            {sitemap?.paths?.slice(0, 4).map((path, pathIndex) => (
+              <Link
+                key={pathIndex}
+                href={path?.path}
+                className={`
+                  text-xs text-gray-600 hover:text-${color}-600
+                  transition-colors flex items-center gap-2
+                  py-1.5 px-2 my-0.5 rounded-md hover:bg-white
+                `}
+              >
+                <div
+                  className={`w-4 h-4 flex items-center justify-center rounded-full bg-${color}-50`}
                 >
-                  <div className="flex items-center gap-1">
-                    {path.icon && <span className="text-xs">{path.icon}</span>}
-                    <span>{path?.name}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+                  {path.icon ? (
+                    <span className={`text-${color}-500 text-[10px]`}>
+                      {path.icon}
+                    </span>
+                  ) : (
+                    <IoScanOutline
+                      className={`text-${color}-500 text-[10px]`}
+                    />
+                  )}
+                </div>
+                <span>{path?.name}</span>
+              </Link>
+            ))}
           </div>
-        )}
+        </div>
       </div>
+    );
+  },
+  (prevProps, nextProps) => {
+    // Custom comparison for maximum performance
+    return (
+      prevProps.index === nextProps.index &&
+      prevProps.activeDropdown === nextProps.activeDropdown &&
+      prevProps.isMobile === nextProps.isMobile &&
+      prevProps.sitemap.name === nextProps.sitemap.name
     );
   }
 );
-
 FooterSection.displayName = "FooterSection";
 
-// Elegant Footer Component with Light Theme
-const Footer = memo(() => {
+// Optimized Footer Component
+const Footer = () => {
   const router = useRouter();
   const year = new Date().getFullYear();
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Check if mobile
+  // Memoized sitemap data to prevent recreation on each render
+  const sitemaps = useMemo(
+    () => [
+      {
+        name: "Smart Features",
+        icon: <IoFlashSharp />,
+        paths: [
+          {
+            name: "AI Interfaces",
+            path: "/",
+            icon: <IoScanOutline />,
+          },
+          {
+            name: "3D Displays",
+            path: "/",
+            icon: <IoLayersOutline />,
+          },
+          {
+            name: "Cloud Computing",
+            path: "/",
+            icon: <IoSparklesOutline />,
+          },
+          {
+            name: "Voice Control",
+            path: "/",
+            icon: <IoSparklesOutline />,
+          },
+        ],
+      },
+      {
+        name: "Resources",
+        icon: <IoLeafOutline />,
+        paths: [
+          {
+            name: "Knowledge Base",
+            path: "/",
+            icon: <IoGlobeOutline />,
+          },
+          {
+            name: "User Guides",
+            path: "/",
+            icon: <IoLayersOutline />,
+          },
+          {
+            name: "Digital Archives",
+            path: "/",
+            icon: <IoLayersOutline />,
+          },
+          {
+            name: "Learning Center",
+            path: "/",
+            icon: <IoSparklesOutline />,
+          },
+        ],
+      },
+      {
+        name: "About Us",
+        icon: <IoHeartOutline />,
+        paths: [
+          {
+            name: "Our Team",
+            path: "/",
+            icon: <IoAccessibilityOutline />,
+          },
+          {
+            name: "Global Locations",
+            path: "/",
+            icon: <IoPlanetOutline />,
+          },
+          {
+            name: "Privacy Policy",
+            path: "/",
+            icon: <IoShieldOutline />,
+          },
+          {
+            name: "Terms of Service",
+            path: "/",
+            icon: <IoScanOutline />,
+          },
+        ],
+      },
+      {
+        name: "Contact",
+        icon: <IoGlobeOutline />,
+        paths: [
+          {
+            name: "Customer Support",
+            path: "/",
+            icon: <IoHeartOutline />,
+          },
+          {
+            name: "Business Inquiries",
+            path: "/",
+            icon: <IoRocketSharp />,
+          },
+          {
+            name: "Partnerships",
+            path: "/",
+            icon: <IoPlanetOutline />,
+          },
+        ],
+      },
+      {
+        name: "Legal",
+        icon: <IoShieldOutline />,
+        paths: [
+          {
+            name: "Terms & Conditions",
+            path: "/",
+            icon: <IoSparklesOutline />,
+          },
+          {
+            name: "Privacy Policy",
+            path: "/",
+            icon: <IoShieldOutline />,
+          },
+          {
+            name: "Cookie Policy",
+            path: "/",
+            icon: <IoLayersOutline />,
+          },
+        ],
+      },
+      {},
+      {
+        name: "Connect With Us",
+        icon: <IoRocketSharp />,
+        paths: [
+          {
+            name: "Facebook",
+            path: "https://www.linkedin.com/in/m-faisal125/",
+            icon: <IoLogoFacebook />,
+          },
+          {
+            name: "LinkedIn",
+            path: "https://www.linkedin.com/in/m-faisal125/",
+            icon: <IoLogoLinkedin />,
+          },
+          {
+            name: "GitHub",
+            path: "https://github.com/MFaisal125/",
+            icon: <IoLogoGithub />,
+          },
+        ],
+      },
+    ],
+    []
+  );
+
+  // Optimized mobile detection with debounce
   useEffect(() => {
+    let timeoutId;
+
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setIsMobile(window.innerWidth < 768);
+      }, 100);
     };
 
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  // Toggle dropdown for mobile
-  const toggleDropdown = (index) => {
-    setActiveDropdown(activeDropdown === index ? null : index);
-  };
-
-  // Sitemap data
-  const sitemaps = [
-    {
-      name: "Innovative Features",
-      icon: <IoFlashSharp className="text-blue-500" />,
-      paths: [
-        {
-          name: "Smart Interfaces",
-          path: "/",
-        },
-        {
-          name: "Elegant Displays",
-          path: "/",
-        },
-        {
-          name: "Cloud Computing",
-          path: "/",
-        },
-        {
-          name: "AI Assistance",
-          path: "/",
-        },
-        {
-          name: "Advanced Technology",
-          path: "/",
-        },
-        {
-          name: "Seamless Integration",
-          path: "/",
-        },
-      ],
+  // Toggle dropdown for mobile - optimized to close others
+  const toggleDropdown = useCallback(
+    (index) => {
+      setActiveDropdown(activeDropdown === index ? null : index);
     },
-    {
-      name: "Resources",
-      icon: <IoLeafOutline className="text-green-500" />,
-      paths: [
-        {
-          name: "Knowledge Base",
-          path: "/",
-        },
-        {
-          name: "Interactive Guides",
-          path: "/",
-        },
-        {
-          name: "Digital Archives",
-          path: "/",
-        },
-        {
-          name: "Learning Center",
-          path: "/",
-        },
-      ],
-    },
-    {
-      name: "About Us",
-      icon: <IoHeartOutline className="text-red-400" />,
-      paths: [
-        {
-          name: "Our Team",
-          path: "/",
-        },
-        {
-          name: "Global Locations",
-          path: "/",
-        },
-        {
-          name: "Privacy Commitment",
-          path: "/",
-        },
-        {
-          name: "Terms of Service",
-          path: "/",
-        },
-      ],
-    },
-    {
-      name: "Contact",
-      icon: <IoGlobeOutline className="text-purple-500" />,
-      paths: [
-        {
-          name: "Customer Support",
-          path: "/",
-        },
-        {
-          name: "Business Inquiries",
-          path: "/",
-        },
-        {
-          name: "Partnership",
-          path: "/",
-        },
-      ],
-    },
-    {
-      name: "Legal",
-      icon: <IoShieldOutline className="text-amber-500" />,
-      paths: [
-        {
-          name: "Terms & Conditions",
-          path: "/",
-        },
-        {
-          name: "Privacy Policy",
-          path: "/",
-        },
-        {
-          name: "Cookie Policy",
-          path: "/",
-        },
-      ],
-    },
-    {},
-    {
-      name: "Connect With Us",
-      icon: <IoRocketSharp className="text-blue-600" />,
-      paths: [
-        {
-          name: "Facebook",
-          path: "https://www.linkedin.com/in/m-faisal125/",
-          icon: <IoLogoFacebook className="text-blue-600" />,
-        },
-        {
-          name: "LinkedIn",
-          path: "https://www.linkedin.com/in/m-faisal125/",
-          icon: <IoLogoLinkedin className="text-blue-700" />,
-        },
-        {
-          name: "GitHub",
-          path: "https://github.com/MFaisal125/",
-          icon: <IoLogoGithub className="text-gray-700" />,
-        },
-      ],
-    },
-  ];
+    [activeDropdown]
+  );
 
   return (
-    <footer className="relative overflow-hidden bg-gradient-to-b from-white to-blue-50 py-5 sm:py-6 w-full border-t border-blue-100">
-      {/* Minimal background */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-white to-blue-50/30 pointer-events-none" />
-
-      <div className="w-full max-w-screen-xl mx-auto px-3 flex flex-col gap-y-4 relative z-10">
+    <footer
+      className={`
+      relative w-full border-t border-gray-100
+      ${
+        isMobile
+          ? "bg-gray-50 py-4"
+          : "bg-gradient-to-b from-white to-blue-50 py-5 sm:py-6"
+      }
+    `}
+    >
+      <div className="w-full max-w-screen-xl mx-auto px-3 flex flex-col gap-y-4">
         {/* Logo section */}
-        <div className="flex justify-center mb-3">
-          <IoRocketSharp className="text-xl text-blue-500" />
+        <div className="flex justify-center mb-2">
+          <div
+            className={`
+            ${isMobile ? "bg-white p-2 rounded-full shadow-sm" : ""}
+          `}
+          >
+            <IoRocketSharp className="text-lg text-blue-500" />
+          </div>
         </div>
 
-        {/* Main footer content */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-2">
+        {/* Main footer content - optimized grid for mobile */}
+        <div
+          className={`
+          grid gap-2
+          ${
+            isMobile
+              ? "grid-cols-1"
+              : "grid-cols-2 md:grid-cols-3 lg:grid-cols-6 md:gap-2"
+          }
+        `}
+        >
           {sitemaps?.map((sitemap, index) => (
             <FooterSection
               key={index}
@@ -444,22 +550,35 @@ const Footer = memo(() => {
               index={index}
               activeDropdown={activeDropdown}
               toggleDropdown={toggleDropdown}
+              isMobile={isMobile}
             />
           ))}
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-blue-100/50 my-3" />
+        <div className="w-full h-px bg-gray-100 my-3" />
 
         {/* Copyright section */}
         <div className="text-center text-xs text-gray-500">
-          &copy; {year} E-Commerce• All rights reserved
+          &copy; {year} E-Commerce • All rights reserved
         </div>
       </div>
+
+      {/* Minimal animations for mobile - only what's necessary */}
+      <style jsx global>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(5px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </footer>
   );
-});
+};
 
-Footer.displayName = "Footer";
-
-export default Footer;
+export default memo(Footer);

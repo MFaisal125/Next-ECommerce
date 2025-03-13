@@ -231,7 +231,7 @@ const Banner2 = ({ className }) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="flex flex-col gap-y-4 max-w-lg z-50 lg:ml-auto lg:mr-0 mr-auto"
+                  className="flex flex-col gap-y-4 max-w-lg z-20 lg:ml-auto lg:mr-0 mr-auto"
                 >
                   <span className="inline-block px-3 py-1 rounded-full bg-white/20 text-sm font-medium mb-1 w-fit">
                     Featured Collection {currentIndex + 1}

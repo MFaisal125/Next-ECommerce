@@ -1,18 +1,3 @@
-/**
- * Title: Write a program using JavaScript on Right
- * Author: Hasibul Islam
- * Portfolio: https://devhasibulislam.vercel.app
- * Linkedin: https://linkedin.com/in/devhasibulislam
- * GitHub: https://github.com/devhasibulislam
- * Facebook: https://facebook.com/devhasibulislam
- * Instagram: https://instagram.com/devhasibulislam
- * Twitter: https://twitter.com/devhasibulislam
- * Pinterest: https://pinterest.com/devhasibulislam
- * WhatsApp: https://wa.me/8801906315901
- * Telegram: devhasibulislam
- * Date: 24, October 2023
- */
-
 import React from "react";
 import { AiFillStar } from "react-icons/ai";
 import CartButton from "./CartButton";
@@ -33,7 +18,8 @@ const Right = ({ product }) => {
             </span>
             <div className="border-l h-7 rounded" />
             <span className="text-xs flex items-center gap-x-1 px-2 h-full bg-zinc-50 rounded">
-              <AiFillStar className="w-4 h-4 text-yellow-500" /> {product?.reviews?.length}
+              <AiFillStar className="w-4 h-4 text-yellow-500" />{" "}
+              {product?.reviews?.length}
             </span>
           </p>
         </div>

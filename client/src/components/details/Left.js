@@ -1,18 +1,3 @@
-/**
- * Title: Write a program using JavaScript on Left
- * Author: Hasibul Islam
- * Portfolio: https://devhasibulislam.vercel.app
- * Linkedin: https://linkedin.com/in/devhasibulislam
- * GitHub: https://github.com/devhasibulislam
- * Facebook: https://facebook.com/devhasibulislam
- * Instagram: https://instagram.com/devhasibulislam
- * Twitter: https://twitter.com/devhasibulislam
- * Pinterest: https://pinterest.com/devhasibulislam
- * WhatsApp: https://wa.me/8801906315901
- * Telegram: devhasibulislam
- * Date: 24, October 2023
- */
-
 import React from "react";
 import LoadImage from "../shared/LoadImage";
 import Discount from "../icons/Discount";
@@ -116,7 +101,10 @@ const Left = ({ product }) => {
 
           <div className="flex flex-row flex-wrap gap-1 mt-4">
             {hashTags.map((hashTag, index) => (
-              <span key={index} className="!text-xs border px-2 py-0.5 rounded-sm">{`#${hashTag}`}</span>
+              <span
+                key={index}
+                className="!text-xs border px-2 py-0.5 rounded-sm"
+              >{`#${hashTag}`}</span>
             ))}
           </div>
         </div>
