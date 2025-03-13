@@ -20,8 +20,8 @@ const Header = () => {
           <Image
             src="/logo.png"
             alt="logo"
-            width={50}
-            height={40}
+            width={55}
+            height={45}
             className="h-[40px] object-contain inline-block cursor-pointer"
             onClick={() => window.open("/", "_self")}
           />
