@@ -1,18 +1,3 @@
-/**
- * Title: Write a program using JavaScript on User Models
- * Author: Hasibul Islam
- * Portfolio: https://devhasibulislam.vercel.app
- * Linkedin: https://linkedin.com/in/devhasibulislam
- * GitHub: https://github.com/devhasibulislam
- * Facebook: https://facebook.com/devhasibulislam
- * Instagram: https:/instagram.com/devhasibulislam
- * Twitter: https://twitter.com/devhasibulislam
- * Pinterest: https://pinterest.com/devhasibulislam
- * WhatsApp: https://wa.me/8801906315901
- * Telegram: devhasibulislam
- * Date: 09, November 2023
- */
-
 /* external imports */
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -79,7 +64,7 @@ const userSchema = new mongoose.Schema(
       ],
       validate: {
         validator: (value) =>
-          validator.isMobilePhone(value, "bn-BD", { strictMode: true }),
+          validator.isMobilePhone(value, "en-PK", { strictMode: true }),
         message:
           "Phone number {VALUE} is not valid. Please, retry like +9203xxxxxxxxx",
       },
