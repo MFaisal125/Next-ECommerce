@@ -561,7 +561,7 @@ const SearchFilter = () => {
     <>
       {/* Search Button */}
       <button
-        className="relative p-2 rounded-full bg-white hover:bg-gray-50 border border-gray-200 shadow-sm transition-all duration-200 hover:shadow group"
+        className="relative p-2 rounded-full bg-white hover:bg-gray-50 transition-all duration-200"
         onClick={() => setIsOpen(true)}
         aria-label="Search products"
       >
@@ -578,7 +578,7 @@ const SearchFilter = () => {
               <div className="p-4 border-b border-gray-100">
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <SearchIcon className="h-5 w-5 text-gray-400" />
+                    {/* <SearchIcon className="h-5 w-5 text-gray-400" /> */}
                   </div>
                   <input
                     ref={searchInputRef}
