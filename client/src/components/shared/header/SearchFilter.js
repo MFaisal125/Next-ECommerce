@@ -621,7 +621,7 @@ const SearchFilter = () => {
     <>
       {/* Search Button with improved accessibility */}
       <button
-        className="relative p-2 bg-white "
+        className="relative p-2 "
         onClick={() => setIsOpen(true)}
         aria-label="Search products"
         title="Search products"

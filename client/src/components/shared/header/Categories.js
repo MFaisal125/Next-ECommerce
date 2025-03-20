@@ -514,7 +514,7 @@ const Categories = () => {
     <div className="relative">
       <button
         ref={buttonRef}
-        className={`relative overflow-hidden group px-2 sm:px-3 py-1.5 sm:py-2 rounded-full flex flex-row items-center gap-x-1 sm:gap-x-2 bg-white border ${
+        className={`relative overflow-hidden group px-2 sm:px-3 py-1.5 sm:py-2 rounded-full flex flex-row items-center gap-x-1 sm:gap-x-2 border ${
           isOpen
             ? "border-purple-300 shadow-sm"
             : "border-gray-200 hover:border-gray-300"
