@@ -125,10 +125,105 @@
 
 // export default Header;
 
+// "use client";
+
+// import { useState, useEffect } from "react";
+// import Container from "../Container";
+// import Image from "next/image";
+// import Categories from "./Categories";
+// import Auth from "./Auth";
+// import Dashboard from "@/components/icons/Dashboard";
+// import SearchFilter from "./SearchFilter";
+// import MyCart from "./MyCart";
+// import { useSelector } from "react-redux";
+
+// const Header = () => {
+//   const user = useSelector((state) => state?.auth?.user);
+//   const [isScrolled, setIsScrolled] = useState(false);
+
+//   // Add scroll event listener to detect when to apply sticky effect
+//   useEffect(() => {
+//     const handleScroll = () => {
+//       // Apply sticky effect after scrolling down 50px
+//       if (window.scrollY > 50) {
+//         setIsScrolled(true);
+//       } else {
+//         setIsScrolled(false);
+//       }
+//     };
+
+//     // Add event listener
+//     window.addEventListener("scroll", handleScroll);
+
+//     // Clean up event listener on component unmount
+//     return () => {
+//       window.removeEventListener("scroll", handleScroll);
+//     };
+//   }, []);
+
+//   return (
+//     <div
+//       className={`sticky top-0 z-40 transition-all duration-300 ${
+//         isScrolled ? "bg-white/70 backdrop-blur-md shadow-sm" : "bg-transparent"
+//       }`}
+//     >
+//       <Container className="">
+//         <nav
+//           className={`rounded-xl flex flex-row justify-between transition-all duration-300 ${
+//             isScrolled ? "py-2 md:py-2" : "py-4 md:p-4 xl:p-4"
+//           }`}
+//         >
+//           <div className="flex flex-row gap-x-4 items-center relative">
+//             <Image
+//               src="/logo.png"
+//               alt="logo"
+//               width={60}
+//               height={50}
+//               className={`object-contain inline-block cursor-pointer transition-all duration-300 ${
+//                 isScrolled ? "h-[40px]" : "h-[50px]"
+//               }`}
+//               onClick={() => window.open("/", "_self")}
+//             />
+
+//             <Categories />
+//           </div>
+//           <div className="flex flex-row gap-x-2 relative">
+//             {user && Object?.keys(user)?.length > 0 && (
+//               <button
+//                 className="p-2 rounded-secondary hover:bg-slate-100 transition-colors"
+//                 onClick={() => window.open("/dashboard", "_self")}
+//               >
+//                 <Dashboard className="h-6 w-6" />
+//               </button>
+//             )}
+//             <SearchFilter />
+//             <Auth />
+//             <MyCart />
+//           </div>
+//         </nav>
+//       </Container>
+
+//       {/* Add CSS to ensure dropdowns appear correctly */}
+//       <style jsx global>{`
+//         /* Ensure dropdowns appear above other content but below header */
+//         .dropdown-content {
+//           z-index: 30;
+//         }
+
+//         /* Fix for Categories dropdown */
+//         [data-categories-dropdown] {
+//           z-index: 50;
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default Header;
+
 "use client";
 
 import { useState, useEffect } from "react";
-import Container from "../Container";
 import Image from "next/image";
 import Categories from "./Categories";
 import Auth from "./Auth";
@@ -140,6 +235,23 @@ import { useSelector } from "react-redux";
 const Header = () => {
   const user = useSelector((state) => state?.auth?.user);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if device is mobile and update on resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Add event listener for window resize
+    window.addEventListener("resize", checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   // Add scroll event listener to detect when to apply sticky effect
   useEffect(() => {
@@ -163,37 +275,41 @@ const Header = () => {
 
   return (
     <div
-      className={`sticky top-0 z-40 transition-all duration-300 ${
+      className={`sticky top-0 z-40 transition-all duration-300 w-full ${
         isScrolled ? "bg-white/70 backdrop-blur-md shadow-sm" : "bg-transparent"
       }`}
     >
-      <Container className="">
+      <div
+        className={`w-full px-2 sm:px-4 md:px-6 mx-auto ${
+          isMobile ? "max-w-full" : ""
+        }`}
+      >
         <nav
-          className={`rounded-xl flex flex-row justify-between transition-all duration-300 ${
-            isScrolled ? "py-2 md:py-2" : "py-4 md:p-4 xl:p-4"
+          className={`rounded-xl flex flex-row justify-between items-center transition-all duration-300 ${
+            isScrolled ? "py-2 md:py-2" : "py-3 md:p-4 xl:p-4"
           }`}
         >
-          <div className="flex flex-row gap-x-4 items-center relative">
+          <div className="flex flex-row gap-x-2 sm:gap-x-4 items-center relative">
             <Image
               src="/logo.png"
               alt="logo"
               width={60}
               height={50}
               className={`object-contain inline-block cursor-pointer transition-all duration-300 ${
-                isScrolled ? "h-[40px]" : "h-[50px]"
+                isScrolled ? "h-[35px] w-auto" : "h-[45px] w-auto"
               }`}
               onClick={() => window.open("/", "_self")}
             />
 
             <Categories />
           </div>
-          <div className="flex flex-row gap-x-2 relative">
+          <div className="flex flex-row gap-x-1 sm:gap-x-2 relative">
             {user && Object?.keys(user)?.length > 0 && (
               <button
-                className="p-2 rounded-secondary hover:bg-slate-100 transition-colors"
+                className="p-1.5 sm:p-2 rounded-secondary hover:bg-slate-100 transition-colors"
                 onClick={() => window.open("/dashboard", "_self")}
               >
-                <Dashboard className="h-6 w-6" />
+                <Dashboard className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             )}
             <SearchFilter />
@@ -201,7 +317,7 @@ const Header = () => {
             <MyCart />
           </div>
         </nav>
-      </Container>
+      </div>
 
       {/* Add CSS to ensure dropdowns appear correctly */}
       <style jsx global>{`
