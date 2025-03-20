@@ -182,7 +182,6 @@ import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
 
-// Dynamically import components for code splitting
 const Cart = dynamic(() => import("@/components/icons/Cart"), {
   ssr: false,
   loading: () => <div className="h-5 w-5 bg-gray-200 rounded animate-pulse" />,
@@ -544,7 +543,7 @@ const MyCart = () => {
           <div className="w-full flex flex-col">
             <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
               <h3 className="text-sm font-medium text-gray-900">
-                Shopping Cart
+                Shopping Carts
               </h3>
               <span className="text-xs text-gray-500">
                 {cartItemsCount} items
