@@ -217,7 +217,7 @@ const MyCart = () => {
   return (
     <div className="relative">
       <button
-        className="p-2 rounded-full mt-[8px] hover:bg-slate-100 transition-all duration-200 relative"
+        className="p-1 rounded-full mt-[7px] hover:bg-slate-100 transition-all duration-200 relative"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
