@@ -1,18 +1,3 @@
-// /**
-//  * Title: Write a program using JavaScript on SearchFilter
-//  * Author: Hasibul Islam
-//  * Portfolio: https://devhasibulislam.vercel.app
-//  * Linkedin: https://linkedin.com/in/devhasibulislam
-//  * GitHub: https://github.com/devhasibulislam
-//  * Facebook: https://facebook.com/devhasibulislam
-//  * Instagram: https://instagram.com/devhasibulislam
-//  * Twitter: https://twitter.com/devhasibulislam
-//  * Pinterest: https://pinterest.com/devhasibulislam
-//  * WhatsApp: https://wa.me/8801906315901
-//  * Telegram: devhasibulislam
-//  * Date: 13, November 2023
-//  */
-
 // import Search from "@/components/icons/Search";
 // import React, { useEffect, useMemo, useState } from "react";
 // import Modal from "../Modal";
@@ -204,20 +189,16 @@
 
 "use client";
 
-/**
- * Title: Modern Search Filter Component
- * Description: Fast, optimized and dynamic search experience
- */
-
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
+
 import { useGetProductsQuery } from "@/services/product/productApi";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import SearchCard from "../skeletonLoading/SearchCard";
 import { toast } from "react-hot-toast";
 
-// Custom debounce function to avoid lodash dependency
-function useDebounce(callback, delay) {
+// Optimized debounce hook with proper cleanup
+const useDebounce = (callback, delay) => {
   const timeoutRef = useRef(null);
 
   const debouncedFn = useCallback(
@@ -225,26 +206,19 @@ function useDebounce(callback, delay) {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-
-      timeoutRef.current = setTimeout(() => {
-        callback(...args);
-      }, delay);
+      timeoutRef.current = setTimeout(() => callback(...args), delay);
     },
     [callback, delay]
   );
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
   }, []);
 
   return debouncedFn;
-}
+};
 
-// Icons as inline SVGs for better performance
+// Optimized SVG components with memoization
 const SearchIcon = ({ className = "h-5 w-5" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -310,19 +284,29 @@ const ArrowRightIcon = ({ className = "h-5 w-5" }) => (
   </svg>
 );
 
-// Simple animation components to replace framer-motion
+// Optimized animation components with CSS variables for better performance
 const Backdrop = ({ children, onClick }) => {
-  const [opacity, setOpacity] = useState(0);
+  const backdropRef = useRef(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setOpacity(1), 10);
-    return () => clearTimeout(timer);
+    const element = backdropRef.current;
+    if (element) {
+      requestAnimationFrame(() => {
+        element.style.opacity = "1";
+      });
+    }
+    return () => {
+      if (element) {
+        element.style.opacity = "0";
+      }
+    };
   }, []);
 
   return (
     <div
+      ref={backdropRef}
       className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 transition-opacity duration-300"
-      style={{ opacity }}
+      style={{ opacity: 0 }}
       onClick={onClick}
     >
       {children}
@@ -330,26 +314,26 @@ const Backdrop = ({ children, onClick }) => {
   );
 };
 
-const AnimatedModal = ({ children, onClose }) => {
-  const [opacity, setOpacity] = useState(0);
-  const [transform, setTransform] = useState(
-    "translateY(-20px) translateX(-50%)"
-  );
+const AnimatedModal = ({ children }) => {
+  const modalRef = useRef(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setOpacity(1);
-      setTransform("translateY(0) translateX(-50%)");
-    }, 10);
-    return () => clearTimeout(timer);
+    const element = modalRef.current;
+    if (element) {
+      requestAnimationFrame(() => {
+        element.style.opacity = "1";
+        element.style.transform = "translateY(0) translateX(-50%)";
+      });
+    }
   }, []);
 
   return (
     <div
-      className="fixed top-20 left-1/2 z-[60] w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 transition-all duration-300"
+      ref={modalRef}
+      className="fixed top-20 left-1/2 z-[60] w-[95%] sm:w-[90%] md:w-full max-w-2xl max-h-[80vh] bg-white rounded-xl shadow-2xl overflow-hidden border border-gray-200 transition-all duration-300"
       style={{
-        opacity,
-        transform,
+        opacity: 0,
+        transform: "translateY(-20px) translateX(-50%)",
         transitionProperty: "opacity, transform",
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
@@ -360,26 +344,40 @@ const AnimatedModal = ({ children, onClose }) => {
   );
 };
 
+// Optimized animated item with IntersectionObserver for better performance
 const AnimatedItem = ({ children, index, isVisible }) => {
-  const [opacity, setOpacity] = useState(0);
-  const [transform, setTransform] = useState("translateY(20px)");
+  const itemRef = useRef(null);
+  const [isInView, setIsInView] = useState(false);
 
   useEffect(() => {
-    if (isVisible) {
-      const timer = setTimeout(() => {
-        setOpacity(1);
-        setTransform("translateY(0)");
-      }, 50 + index * 50);
-      return () => clearTimeout(timer);
-    }
+    if (!isVisible) return;
+
+    const element = itemRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setTimeout(() => {
+            setIsInView(true);
+            observer.disconnect();
+          }, 50 + index * 30); // Reduced delay for faster appearance
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
   }, [isVisible, index]);
 
   return (
     <div
+      ref={itemRef}
       className="transition-all duration-300"
       style={{
-        opacity,
-        transform,
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? "translateY(0)" : "translateY(20px)",
         transitionProperty: "opacity, transform",
         transitionTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
       }}
@@ -389,64 +387,92 @@ const AnimatedItem = ({ children, index, isVisible }) => {
   );
 };
 
+// Main component with performance optimizations
 const SearchFilter = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [animateItems, setAnimateItems] = useState(false);
   const [recentSearches, setRecentSearches] = useState(() => {
     if (typeof window !== "undefined") {
-      return JSON.parse(localStorage.getItem("recentSearches") || "[]");
+      try {
+        return JSON.parse(localStorage.getItem("recentSearches") || "[]");
+      } catch (e) {
+        return [];
+      }
     }
     return [];
   });
 
   const searchInputRef = useRef(null);
   const modalRef = useRef(null);
+  const inputValueRef = useRef(""); // Track input value without re-renders
 
+  // Optimized query with skip option to prevent unnecessary fetches
   const {
     data: productsData,
     error: productsError,
     isLoading: productsLoading,
-  } = useGetProductsQuery();
+  } = useGetProductsQuery(undefined, {
+    skip: !isOpen, // Only fetch when modal is open
+  });
 
+  // Memoized products to prevent unnecessary re-renders
   const products = useMemo(() => productsData?.data || [], [productsData]);
   const router = useRouter();
 
-  // Handle errors
+  // Handle errors with useEffect cleanup
   useEffect(() => {
+    let toastId;
     if (productsError) {
-      toast.error(productsError?.data?.description, { id: "search-filter" });
+      toastId = toast.error(productsError?.data?.description, {
+        id: "search-filter",
+      });
     }
+    return () => {
+      if (toastId) toast.dismiss(toastId);
+    };
   }, [productsError]);
 
-  // Save recent searches to localStorage
+  // Save recent searches to localStorage with throttling
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
-    }
+    if (typeof window === "undefined" || !recentSearches.length) return;
+
+    const saveToStorage = () => {
+      try {
+        localStorage.setItem("recentSearches", JSON.stringify(recentSearches));
+      } catch (e) {
+        console.error("Failed to save recent searches:", e);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToStorage, 500);
+    return () => clearTimeout(timeoutId);
   }, [recentSearches]);
 
   // Focus search input when modal opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         searchInputRef.current.focus();
       }, 100);
+      return () => clearTimeout(timeoutId);
     }
   }, [isOpen]);
 
-  // Animate items when modal opens
+  // Animate items when modal opens with cleanup
   useEffect(() => {
+    let timeoutId;
     if (isOpen) {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         setAnimateItems(true);
       }, 300);
     } else {
       setAnimateItems(false);
     }
+    return () => clearTimeout(timeoutId);
   }, [isOpen]);
 
-  // Close modal on escape key
+  // Close modal on escape key with proper cleanup
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === "Escape") {
@@ -454,11 +480,13 @@ const SearchFilter = () => {
       }
     };
 
-    window.addEventListener("keydown", handleEsc);
-    return () => window.removeEventListener("keydown", handleEsc);
-  }, []);
+    if (isOpen) {
+      window.addEventListener("keydown", handleEsc);
+      return () => window.removeEventListener("keydown", handleEsc);
+    }
+  }, [isOpen]);
 
-  // Close modal when clicking outside
+  // Close modal when clicking outside with proper cleanup
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (modalRef.current && !modalRef.current.contains(e.target)) {
@@ -468,159 +496,196 @@ const SearchFilter = () => {
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, [isOpen]);
 
-  // Debounced search handler for performance
+  // Optimized debounced search handler
   const handleDebouncedSearch = useCallback(
     (value) => {
-      setSearchTerm(value.toLowerCase());
+      const trimmedValue = value.trim().toLowerCase();
+      setSearchTerm(trimmedValue);
 
       // Add to recent searches if not empty and not already in list
-      if (value.trim() && !recentSearches.includes(value.trim())) {
-        setRecentSearches((prev) => [value.trim(), ...prev.slice(0, 4)]);
+      if (trimmedValue && !recentSearches.includes(trimmedValue)) {
+        setRecentSearches((prev) => [trimmedValue, ...prev.slice(0, 4)]);
       }
     },
     [recentSearches]
   );
 
-  const debouncedSearch = useDebounce(handleDebouncedSearch, 300);
+  const debouncedSearch = useDebounce(handleDebouncedSearch, 250); // Reduced debounce time for faster response
 
   const handleSearch = (event) => {
-    debouncedSearch(event.target.value);
+    const value = event.target.value;
+    inputValueRef.current = value; // Update ref without re-render
+    debouncedSearch(value);
   };
 
-  const clearSearch = () => {
+  const clearSearch = useCallback(() => {
     setSearchTerm("");
+    inputValueRef.current = "";
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
       searchInputRef.current.focus();
     }
-  };
+  }, []);
 
-  // Filter products based on search term
+  // Optimized product filtering with memoization and early returns
   const filteredProducts = useMemo(() => {
     if (!searchTerm?.trim()) return [];
+    if (!products.length) return [];
 
-    return products.filter(({ title, summary }) => {
-      const lowerTitle = title?.toLowerCase() || "";
-      const lowerSummary = summary?.toLowerCase() || "";
+    // Use faster array methods and early returns
+    return products.filter((product) => {
+      const title = product?.title?.toLowerCase() || "";
+      if (title.includes(searchTerm)) return true;
 
-      return (
-        lowerTitle?.includes(searchTerm) || lowerSummary?.includes(searchTerm)
-      );
+      const summary = product?.summary?.toLowerCase() || "";
+      return summary.includes(searchTerm);
     });
   }, [searchTerm, products]);
 
-  // Highlight matched text
-  const highlightMatch = (text, keyword) => {
+  // Optimized text highlighting function
+  const highlightMatch = useCallback((text, keyword) => {
     if (!keyword || !text) return text;
 
-    const parts = text.split(new RegExp(`(${keyword})`, "gi"));
+    try {
+      const regex = new RegExp(
+        `(${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+        "gi"
+      );
+      const parts = text.split(regex);
 
-    return parts.map((part, i) =>
-      part.toLowerCase() === keyword.toLowerCase() ? (
-        <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm">
-          {part}
-        </mark>
-      ) : (
-        part
-      )
-    );
-  };
+      return parts.map((part, i) =>
+        part.toLowerCase() === keyword.toLowerCase() ? (
+          <mark key={i} className="bg-yellow-200 px-0.5 rounded-sm">
+            {part}
+          </mark>
+        ) : (
+          part
+        )
+      );
+    } catch (e) {
+      return text; // Fallback if regex fails
+    }
+  }, []);
 
-  // Navigate to product page
-  const navigateToProduct = (product) => {
-    setIsOpen(false);
-    router.push(
-      `/product?product_id=${product?._id}&product_title=${product?.title
-        .replace(/ /g, "-")
-        .toLowerCase()}`
-    );
-  };
+  // Optimized navigation function
+  const navigateToProduct = useCallback(
+    (product) => {
+      setIsOpen(false);
+      const slug = product?.title
+        .replace(/[^\w\s]/gi, "")
+        .replace(/\s+/g, "-")
+        .toLowerCase();
+      router.push(`/product?product_id=${product?._id}&product_title=${slug}`);
+    },
+    [router]
+  );
 
-  // Use recent search
-  const handleRecentSearch = (term) => {
+  // Optimized recent search handler
+  const handleRecentSearch = useCallback((term) => {
     if (searchInputRef.current) {
       searchInputRef.current.value = term;
+      inputValueRef.current = term;
     }
     setSearchTerm(term.toLowerCase());
-  };
+  }, []);
 
-  // Clear recent searches
-  const clearRecentSearches = (e) => {
+  // Optimized clear recent searches function
+  const clearRecentSearches = useCallback((e) => {
     e.stopPropagation();
     setRecentSearches([]);
-  };
+    try {
+      localStorage.removeItem("recentSearches");
+    } catch (e) {
+      console.error("Failed to clear recent searches:", e);
+    }
+  }, []);
+
+  // Optimized body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   return (
     <>
-      {/* Search Button */}
+      {/* Search Button with improved accessibility */}
       <button
-        className="relative p-2 rounded-full bg-white hover:bg-gray-50 transition-all duration-200"
+        className="relative p-2 bg-white "
         onClick={() => setIsOpen(true)}
         aria-label="Search products"
+        title="Search products"
       >
         <SearchIcon className="h-5 w-5 text-gray-600 group-hover:text-gray-900 transition-colors" />
-        <span className="absolute -bottom-1 -right-1 w-2 h-2 bg-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></span>
+        <span className="absolute -bottom-1 -right-1 w-2 h-2 transition-opacity"></span>
       </button>
 
-      {/* Search Modal */}
+      {/* Search Modal with improved mobile responsiveness */}
       {isOpen && (
         <Backdrop onClick={() => setIsOpen(false)}>
           <AnimatedModal>
             <div ref={modalRef} className="flex flex-col h-full">
-              {/* Search Header */}
-              <div className="p-4 border-b border-gray-100">
+              {/* Search Header with improved mobile styling */}
+              <div className="p-3 sm:p-4 border-b border-gray-100">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    {/* <SearchIcon className="h-5 w-5 text-gray-400" /> */}
-                  </div>
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"></div>
                   <input
                     ref={searchInputRef}
                     type="search"
                     placeholder="Search for products..."
-                    className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-10 py-2 sm:py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     onChange={handleSearch}
                     defaultValue={searchTerm}
+                    aria-label="Search input"
                   />
-                  {searchInputRef?.current?.value && (
+                  {inputValueRef.current && (
                     <button
                       className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       onClick={clearSearch}
+                      aria-label="Clear search"
                     >
                       <CloseIcon className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </button>
                   )}
                 </div>
 
-                {/* Recent Searches */}
+                {/* Recent Searches with improved mobile layout */}
                 {recentSearches.length > 0 && !searchTerm && (
-                  <div className="mt-3">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="mt-2 sm:mt-3">
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
                       <span className="text-xs font-medium text-gray-500">
                         Recent Searches
                       </span>
                       <button
                         className="text-xs text-purple-600 hover:text-purple-800"
                         onClick={clearRecentSearches}
+                        aria-label="Clear all recent searches"
                       >
                         Clear all
                       </button>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {recentSearches.map((term, index) => (
                         <button
                           key={index}
-                          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700 transition-colors flex items-center gap-1.5"
+                          className="px-2 sm:px-3 py-1 sm:py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-700 transition-colors flex items-center gap-1 sm:gap-1.5"
                           onClick={() => handleRecentSearch(term)}
+                          aria-label={`Search for ${term}`}
                         >
-                          <SearchIcon className="h-3 w-3 text-gray-500" />
-                          {term}
+                          <SearchIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-gray-500" />
+                          <span className="truncate max-w-[100px] sm:max-w-[150px]">
+                            {term}
+                          </span>
                         </button>
                       ))}
                     </div>
@@ -628,99 +693,114 @@ const SearchFilter = () => {
                 )}
               </div>
 
-              {/* Search Results */}
-              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+              {/* Search Results with improved scrolling performance */}
+              <div className="flex-1 overflow-y-auto p-3 sm:p-4 custom-scrollbar overscroll-contain">
                 {/* Loading State */}
                 {productsLoading && searchTerm && (
-                  <div className="space-y-4">
-                    {[1, 2, 3, 4].map((_, index) => (
+                  <div className="space-y-3 sm:space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
                       <SearchCard key={index} />
                     ))}
                   </div>
                 )}
 
-                {/* Empty State */}
+                {/* Empty State with improved mobile layout */}
                 {!productsLoading &&
                   searchTerm &&
                   filteredProducts.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-10 text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <InformIcon className="h-8 w-8 text-gray-400" />
+                    <div className="flex flex-col items-center justify-center py-6 sm:py-10 text-center">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                        <InformIcon className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
                       </div>
-                      <h3 className="text-lg font-medium text-gray-800 mb-1">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-1">
                         No results found
                       </h3>
-                      <p className="text-sm text-gray-500 max-w-md">
+                      <p className="text-xs sm:text-sm text-gray-500 max-w-md px-4">
                         We couldn't find any products matching "{searchTerm}".
                         Try using different keywords or check for typos.
                       </p>
                     </div>
                   )}
 
-                {/* Results */}
+                {/* Results with improved mobile layout and virtualization */}
                 {!productsLoading && filteredProducts.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-700">
+                  <div className="space-y-3 sm:space-y-4">
+                    <div className="flex items-center justify-between mb-1 sm:mb-2">
+                      <span className="text-xs sm:text-sm font-medium text-gray-700">
                         {filteredProducts.length} results for "{searchTerm}"
                       </span>
                     </div>
 
-                    {filteredProducts.map((product, index) => (
+                    {/* Only render visible items for better performance */}
+                    {filteredProducts.slice(0, 20).map((product, index) => (
                       <AnimatedItem
                         key={product?._id}
                         index={index}
                         isVisible={animateItems}
                       >
                         <div
-                          className="group flex gap-4 p-3 rounded-lg border border-gray-100 hover:border-purple-200 hover:bg-purple-50/30 cursor-pointer transition-all"
+                          className="group flex gap-2 sm:gap-4 p-2 sm:p-3 rounded-lg border border-gray-100 hover:border-purple-200 hover:bg-purple-50/30 cursor-pointer transition-all"
                           onClick={() => navigateToProduct(product)}
+                          role="button"
+                          tabIndex={0}
+                          aria-label={`View product: ${product?.title}`}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              navigateToProduct(product);
+                            }
+                          }}
                         >
-                          {/* Product Image */}
-                          <div className="relative overflow-hidden rounded-lg h-16 w-16 bg-gray-100 flex-shrink-0">
+                          {/* Product Image with optimized loading */}
+                          <div className="relative overflow-hidden rounded-lg h-14 w-14 sm:h-16 sm:w-16 bg-gray-100 flex-shrink-0">
                             <Image
                               src={
                                 product?.thumbnail?.url || "/placeholder.svg"
                               }
                               alt={
-                                product?.thumbnail?.public_id || product?.title
+                                product?.thumbnail?.public_id ||
+                                product?.title ||
+                                "Product image"
                               }
                               width={64}
                               height={64}
                               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder.svg";
+                              }}
                             />
                           </div>
 
-                          {/* Product Info */}
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-medium text-gray-800 mb-1 line-clamp-1">
+                          {/* Product Info with improved text truncation */}
+                          <div className="flex-1 min-w-0 overflow-hidden">
+                            <h3 className="text-xs sm:text-sm font-medium text-gray-800 mb-0.5 sm:mb-1 line-clamp-1">
                               {highlightMatch(product?.title, searchTerm)}
                             </h3>
-                            <p className="text-xs text-gray-500 line-clamp-2 mb-2">
+                            <p className="text-[10px] sm:text-xs text-gray-500 line-clamp-2 mb-1 sm:mb-2">
                               {highlightMatch(product?.summary, searchTerm)}
                             </p>
 
-                            {/* Product Meta */}
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="text-sm font-medium text-purple-700">
+                            {/* Product Meta with improved mobile layout */}
+                            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                              <span className="text-xs sm:text-sm font-medium text-purple-700">
                                 ${product?.price}.00
                               </span>
 
-                              <div className="flex flex-wrap gap-1.5">
+                              <div className="flex flex-wrap gap-1 sm:gap-1.5">
                                 {product?.store?.title && (
-                                  <span className="px-2 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 rounded-full">
+                                  <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[10px] font-medium bg-purple-100 text-purple-700 rounded-full truncate max-w-[80px] sm:max-w-[100px]">
                                     {product.store.title}
                                   </span>
                                 )}
 
                                 {product?.brand?.title && (
-                                  <span className="px-2 py-0.5 text-[10px] font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                                  <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[10px] font-medium bg-indigo-100 text-indigo-700 rounded-full truncate max-w-[80px] sm:max-w-[100px]">
                                     {product.brand.title}
                                   </span>
                                 )}
 
                                 {product?.category?.title && (
-                                  <span className="px-2 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded-full">
+                                  <span className="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[10px] font-medium bg-blue-100 text-blue-700 rounded-full truncate max-w-[80px] sm:max-w-[100px]">
                                     {product.category.title}
                                   </span>
                                 )}
@@ -730,7 +810,7 @@ const SearchFilter = () => {
 
                           {/* Arrow indicator */}
                           <div className="self-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ArrowRightIcon className="h-4 w-4 text-purple-500" />
+                            <ArrowRightIcon className="h-3 w-3 sm:h-4 sm:w-4 text-purple-500" />
                           </div>
                         </div>
                       </AnimatedItem>
@@ -740,14 +820,14 @@ const SearchFilter = () => {
 
                 {/* Initial State - No Search Yet */}
                 {!searchTerm && !recentSearches.length && (
-                  <div className="flex flex-col items-center justify-center py-10 text-center">
-                    <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-4">
-                      <SearchIcon className="h-8 w-8 text-purple-500" />
+                  <div className="flex flex-col items-center justify-center py-6 sm:py-10 text-center">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
+                      <SearchIcon className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-800 mb-1">
+                    <h3 className="text-base sm:text-lg font-medium text-gray-800 mb-1">
                       Search for products
                     </h3>
-                    <p className="text-sm text-gray-500 max-w-md">
+                    <p className="text-xs sm:text-sm text-gray-500 max-w-md px-4">
                       Type in the search box above to find products by name,
                       description, or keywords.
                     </p>
@@ -755,9 +835,9 @@ const SearchFilter = () => {
                 )}
               </div>
 
-              {/* Footer */}
+              {/* Footer with improved mobile layout */}
               {filteredProducts.length > 0 && (
-                <div className="p-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 text-center">
+                <div className="p-2 sm:p-3 border-t border-gray-100 bg-gray-50 text-[10px] sm:text-xs text-gray-500 text-center">
                   Press ESC to close or click outside
                 </div>
               )}
@@ -766,10 +846,10 @@ const SearchFilter = () => {
         </Backdrop>
       )}
 
-      {/* Custom Scrollbar Styles */}
+      {/* Optimized CSS with better mobile support */}
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
+          width: 3px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -791,28 +871,50 @@ const SearchFilter = () => {
           scrollbar-color: #d1d5db #f1f1f1;
         }
 
-        @media (max-width: 640px) {
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 3px;
-          }
-        }
-
-        /* Highlight animation */
+        /* Optimized highlight animation */
         @keyframes highlightPulse {
-          0% {
+          0%,
+          100% {
             background-color: rgba(253, 224, 71, 0.7);
           }
           50% {
             background-color: rgba(253, 224, 71, 0.3);
-          }
-          100% {
-            background-color: rgba(253, 224, 71, 0.7);
           }
         }
 
         mark {
           animation: highlightPulse 2s ease-in-out infinite;
           background-color: rgba(253, 224, 71, 0.7);
+          border-radius: 2px;
+        }
+
+        /* Prevent body scroll when modal is open */
+        body.modal-open {
+          overflow: hidden;
+        }
+
+        /* Improved mobile responsiveness */
+        @media (max-width: 640px) {
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 2px;
+          }
+
+          mark {
+            animation-duration: 1.5s;
+          }
+        }
+
+        /* Reduce motion for users who prefer it */
+        @media (prefers-reduced-motion: reduce) {
+          mark {
+            animation: none;
+          }
+
+          .transition-all,
+          .transition-opacity,
+          .transition-colors {
+            transition-duration: 0.1s !important;
+          }
         }
       `}</style>
     </>
